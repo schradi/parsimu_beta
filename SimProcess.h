@@ -118,7 +118,7 @@ public:
 	 * @param p current position
 	 * @param n	global size
 	 */
-	int  local_index(int* p, int* n);
+	int  local_index(int* p);
 
 	void matchOutputs();
 
@@ -187,6 +187,8 @@ public:
 	int get_num_p(int* icr_start, int* icr_stop, int com_d, int oth_d, Cell* cells);
 
 	void pl_l_send_recv(int* send_pl_l, int* recv_pl_l, int com_d);
+
+	void create_particles(ParticleList* new_pl, real* r_start, real* r_stop, real resolution);
 };
 
 #endif /* SIMPROCESS_H_ */

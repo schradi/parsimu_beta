@@ -33,18 +33,24 @@ int main(int argc, char* argv[]) {
 	for(int d=0; d<DIM; d++){
 		global_size[d]=100;
 	}
-	real r_cut=10;
+	real r_cut=25;
 	SimProcess* sim_p;
 
 	sim_p= new SimProcess(r_cut, global_size, global_np);
-	int numc=(sim_p->local_nc[0]+2)*(sim_p->local_nc[0]+2);
+	int numc=(sim_p->local_nc[0]+2)*(sim_p->local_nc[1]+2);
 	Cell cells[numc];
 	sim_p->create_cells(cells);
 	sim_p->initData(cells);
-	sim_p->moveParticles(cells);
-	sim_p->communicate(cells);
+	if(sim_p->rank==0){
+
+	}
+	real delta_t=0.5;
+	sim_p->t=0;
+	sim_p->output_resolution=10;
+	sim_p->output(delta_t, cells);
 
 ////	sim_p->timeIntegration();
 
 	MPI::Finalize();
+	return 0;
 }

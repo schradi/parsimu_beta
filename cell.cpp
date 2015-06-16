@@ -7,6 +7,30 @@
 
 #include "cell.h"
 
+Cell::Cell(real* p_cell_size, int p_id, real* p_start, int p_timestep){
+	for(int d=0; d<DIM; d++){
+		cell_size[d]=p_cell_size[d];
+		start[d]=p_start[d];
+	}
+	id=p_id;
+	num_part=0;
+	timestep=p_timestep;
+	adding=NULL;
+	pl=NULL;
+}
+
+Cell::Cell(real* p_cell_size){
+	for(int d=0; d<DIM; d++){
+		cell_size[d]=p_cell_size[d];
+		start[d]=0.0;
+	}
+	id=0;
+	num_part=0;
+	timestep=0;
+	adding=NULL;
+	pl=NULL;
+}
+
 void Cell::set_params(real* p_start, int p_id, real p_cell_size){
 	id=p_id;
 	for(int d=0; d<DIM; d++){
@@ -37,19 +61,25 @@ void Cell::insertParticle(Particle* p_p){
 	tmp_pl->p=p_p;
 	tmp_pl->next=pl;
 	pl=tmp_pl;
+	num_part++;
+}
+
+void Cell::insertParticle(ParticleList* p_pl){
+	p_pl->next=pl;
+	pl=p_pl;
 }
 
 void Cell::code_pl(real* cod_pl, int pos, int size){
 	ParticleList* tmp;
 	tmp=pl;
-	while(tmp!=NULL){
-		cod_pl[pos]=(real) tmp->p->id;
-		if(size>1) cod_pl[pos+1]=tmp->p->X[0];
-		if(size>2) cod_pl[pos+2]=tmp->p->X[1];
-		if(size>3) cod_pl[pos+3]=tmp->p->V[0];
-		if(size>4) cod_pl[pos+4]=tmp->p->V[1];
-		if(size>5) cod_pl[pos+5]=tmp->p->m;
-		pos+=size;
+	for(int i=0; i<num_part*size; i+=size){
+		cod_pl[pos+i]=(real) tmp->p->id;
+		if(size>1) cod_pl[pos+1+i]=tmp->p->X[0];
+		if(size>2) cod_pl[pos+2+i]=tmp->p->X[1];
+		if(size>3) cod_pl[pos+3+i]=tmp->p->V[0];
+		if(size>4) cod_pl[pos+4+i]=tmp->p->V[1];
+		if(size>5) cod_pl[pos+5+i]=tmp->p->m;
+		tmp=tmp->next;
 	}
 }
 

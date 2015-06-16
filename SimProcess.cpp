@@ -27,60 +27,79 @@ void SimProcess::timeIntegration(real delta_t, real t_end, Cell* cells){
 
 void SimProcess::output(real delta_t, Cell* cells){
 	// Important: just particles stored in pl are considered
-	int com_d=0;
-	int oth_d=1;
 
 	MPI::Request request;
 	MPI::Status status;
 
 	int* send_pl_l = new int;
-	*send_pl_l=get_num_p(ic_start, ic_stop, com_d, oth_d, cells);
+	*send_pl_l=get_num_p(ic_start, ic_stop, 0, 1, cells);
+		/* direction of communication is not important,
+		 * just needs to be different from other direction
+		 */
 
 	if(rank==0){
-		int recv_pl_l[global_np[0]*global_np[1]];
-		int recv_pl_al=*send_pl_l;
+		// MASTER: Receives information from other processes and puts them in a file
+		int recv_pl_l[global_np[0]*global_np[1]]; // Number of particles of each process
+		int recv_pl_al=*send_pl_l;	// Number of particles at all
 		recv_pl_l[0]=*send_pl_l;
+
+		// Receiving Number of Particles of each Process
 		int* new_recv;
 		new_recv=new int;
-		for (int cp=1; cp<global_np[0]*global_np[1];cp++){
+		for (int cp=1; cp<MPI::COMM_WORLD.Get_size();cp++){
 			*new_recv=0;
 			request=MPI::COMM_WORLD.Irecv(new_recv, 1, MPI::INT, cp, 1);
 			request.Wait(status);
 			recv_pl_l[cp]=*new_recv;
 			recv_pl_al+=*new_recv;
 		}
-
+		delete new_recv;
+		// Receiving Particlelists
 		real recv_pl[OUTP_SZE*recv_pl_al];
-		code_pl(recv_pl, ic_start, ic_stop, com_d, oth_d, OUTP_SZE, cells);
-		int pos=recv_pl_l[0];
+//		code_pl(recv_pl, ic_start, ic_stop, 0, 1, OUTP_SZE, cells);
+		int pos=recv_pl_l[0]*OUTP_SZE;
 		for (int cp=1; cp<global_np[0]*global_np[1];cp++){
-			request=MPI::COMM_WORLD.Irecv(&recv_pl[pos], recv_pl_l[cp], MPI::DOUBLE, cp, 2);
+			std::cout<<"received length from p"<<cp<<"\t"<<recv_pl_l[cp]<<"\n";
+			request=MPI::COMM_WORLD.Irecv(&recv_pl[pos], recv_pl_l[cp]*OUTP_SZE, MPI::DOUBLE, cp, 2);
 			request.Wait(status);
-			pos+=recv_pl_l[cp];
+			std::cout<<"Received Particle:\t";
+			for(int cc=1; cc<OUTP_SZE*recv_pl_l[cp]; cc+=OUTP_SZE){
+				std::cout<<recv_pl[pos+cc]<<"\n";
+			}
+			std::cout<<"\n";
+			pos+=recv_pl_l[cp]*OUTP_SZE;
 		}
-
+		// Fileoutput
 		std::fstream file;
 		int outp_nr=t/(delta_t*output_resolution);
-		char cline_nr[32];
-		sprintf(cline_nr, "%d", outp_nr);
-		char outputfile_new[20]="data_neu/data.csv.";
-		strcat(outputfile_new, cline_nr);
+
+			// Geting Name of the file
+			char cline_nr[32];
+			sprintf(cline_nr, "%d", outp_nr+1);
+			char outputfile_new[20]="data/data.csv.";
+			strcat(outputfile_new, cline_nr);
+
 		file.open(outputfile_new, std::ios::out|std::ios::trunc);
-		for(int i=0; i<recv_pl_al; i++){
-			file<<recv_pl[0]<<","<<recv_pl[1]<<","<<recv_pl[2]<<std::endl;
+		Particle* p=new Particle;
+		file<<"x coord,y coord\n";
+		for(pos=0; pos<recv_pl_al*OUTP_SZE; pos+=OUTP_SZE){
+			cells[0].uncodePl(p, recv_pl, pos, OUTP_SZE);
+			file<<p->X[0]<<","<<p->X[1]<<"\n";
 		}
 		file.close();
 
 	}else{
+		// Sending number of Particles
 		real send_pl[*send_pl_l];
 		request=MPI::COMM_WORLD.Isend(send_pl_l, 1, MPI::INT, 0, 1);
 		request.Wait(status);
 
-		code_pl(send_pl, ic_start, ic_stop, com_d, oth_d, OUTP_SZE, cells);
-
-		request=MPI::COMM_WORLD.Isend(send_pl, *send_pl_l, MPI::DOUBLE, 0, 2);
+		// Sending Particles
+		code_pl(send_pl, ic_start, ic_stop, 0, 1, OUTP_SZE, cells);
+		request=MPI::COMM_WORLD.Isend(send_pl, *send_pl_l*OUTP_SZE, MPI::DOUBLE, 0, 2);
 		request.Wait(status);
 	}
+	delete send_pl_l;
 }
 
 void SimProcess::compF(Cell* cells){
@@ -91,7 +110,7 @@ void SimProcess::compF(Cell* cells){
 	for (ic[1]=ic_start[1]; ic[1]<ic_stop[1]; ic[1]++){
 		for (ic[0]=ic_start[0]; ic[0]<ic_stop[0]; ic[0]++){
 			// for each Cell
-			ci=&cells[local_index(ic, global_nc)];
+			ci=&cells[local_index(ic)];
 			for(ParticleList* pi=ci->pl; pi->next!=NULL; pi=pi->next){
 				// for each Particle within this Cell
 				for(int d=0; d<DIM; d++){
@@ -105,14 +124,14 @@ void SimProcess::compF(Cell* cells){
 	for (ic[1]=ic_start[1]; ic[1]<ic_stop[1]; ic[1]++){
 		for (ic[0]=ic_start[0]; ic[0]<ic_stop[0]; ic[0]++){
 			// for each Cell
-			ci=&cells[local_index(ic, global_nc)];
+			ci=&cells[local_index(ic)];
 
 			for(ParticleList* pi=ci->pl; pi->next!=NULL; pi=pi->next){
 				// for each Particle within this Cell
 				for (nc[1]=ic[1]-1;nc[1]<=ic[1]+1;nc[1]++){
 					for (nc[0]=ic[0]-1;nc[0]<=ic[0]+1;nc[0]++){
 						// for each neighboring cell
-						cj=&cells[local_index(nc, global_nc)];
+						cj=&cells[local_index(nc)];
 						for(ParticleList* pj=cj->pl; pj!=NULL; pj=pj->next ){
 							compF(pi->p, pj->p);
 						}
@@ -140,7 +159,7 @@ void SimProcess::compV(real delta_t, Cell* cells){
 	for (ic[1]=ic_start[1]; ic[1]<ic_stop[1]; ic[1]++){
 			for (ic[0]=ic_start[0]; ic[0]<ic_stop[0]; ic[0]++){
 			// for each Cell
-			c=&cells[local_index(ic, global_nc)];
+			c=&cells[local_index(ic)];
 			for(ParticleList* pi=c->pl; pi->next!=NULL; pi=pi->next){
 				// for each Particle within this Cell
 				for(int d=0; d<DIM; d++){
@@ -157,7 +176,7 @@ void SimProcess::compX(real delta_t, Cell* cells){
 	for (ic[1]=ic_start[1]; ic[1]<ic_stop[1]; ic[1]++){
 		for (ic[0]=ic_start[0]; ic[0]<ic_stop[0]; ic[0]++){
 			// for each Cell
-			c=&cells[local_index(ic, global_nc)];
+			c=&cells[local_index(ic)];
 			for(ParticleList* pi=c->pl; pi->next!=NULL; pi=pi->next){
 				// for each Particle within this Cell
 				for(int d=0; d<DIM; d++)
@@ -179,7 +198,7 @@ void SimProcess::moveParticles(Cell* cells){
 	for (ic[1]=ic_start[1]; ic[1]<ic_stop[1]; ic[1]++){
 		for (ic[0]=ic_start[0]; ic[0]<ic_stop[0]; ic[0]++){
 			// for each Cell
-			c=&cells[local_index(ic, global_nc)];
+			c=&cells[local_index(ic)];
 			akt=c->pl;
 			while(akt->next!=NULL){
 				new_cell=false;
@@ -194,8 +213,8 @@ void SimProcess::moveParticles(Cell* cells){
 					}
 				}
 				if(new_cell){
-					cells[local_index(new_ic, global_nc)].insertParticle(akt->p);
-					cells[local_index(ic, global_nc)].deleteParticle(pre, akt);
+					cells[local_index(new_ic)].insertParticle(akt->p);
+					cells[local_index(ic)].deleteParticle(pre, akt);
 				}
 				pre=akt;
 				akt=akt->next;
@@ -208,7 +227,7 @@ int SimProcess::getLocalCellId(real* X){
 	int id[DIM];
 	id[0]=(int) ceil((X[0]/r_cut)-1);	// Abrunden
 	id[1]=(int) ceil((X[1]/r_cut)-1);
-	return local_index(id, local_nc);
+	return local_index(id);
 }
 
 SimProcess::SimProcess(real p_r_cut, real* p_global_size, int* p_global_np){
@@ -225,7 +244,7 @@ SimProcess::SimProcess(real p_r_cut, real* p_global_size, int* p_global_np){
 		cell_size[d]=r_cut;
 		real pos=0;
 		local_nc[d]=0;
-		while(pos+cell_size[d]<local_size[d]){
+		while(pos+cell_size[d]<=local_size[d]){
 			local_nc[d]++;
 			pos+=cell_size[d];
 		}
@@ -254,12 +273,12 @@ SimProcess::SimProcess(real p_r_cut, real* p_global_size, int* p_global_np){
 	if(ip[0]-1>=0){
 		neigh_lower[0]=ip[0]-1+global_np[0]*ip[1];
 	}else{
-		neigh_lower[0]=global_np[0]*(ip[1]+1);
+		neigh_lower[0]=(global_np[0]*(ip[1]+1))-1;
 	}
 	if(ip[0]+1<global_np[0]){
 		neigh_upper[0]=ip[0]+1+global_np[0]*ip[1];
 	}else{
-		neigh_upper[0]=global_np[0]*ip[1]+1;
+		neigh_upper[0]=(global_np[0]*ip[1]);
 	}
 
 	if(ip[1]-1>=0){
@@ -273,6 +292,38 @@ SimProcess::SimProcess(real p_r_cut, real* p_global_size, int* p_global_np){
 		neigh_upper[1]=ip[0];
 	}
 
+	if(rank==0){
+		for(int d=0; d<DIM; d++){
+			std::cout<<"neigh_lower["<<d<<"]\t"<<neigh_lower[d]<<"\n";
+		}
+		for(int d=0; d<DIM; d++){
+			std::cout<<"neigh_upper["<<d<<"]\t"<<neigh_upper[d]<<"\n";
+		}
+		for(int d=0; d<DIM; d++){
+			std::cout<<"start["<<d<<"]\t"<<start[d]<<"\n";
+		}
+		for(int d=0; d<DIM; d++){
+			std::cout<<"ic_start["<<d<<"]\t"<<ic_start[d]<<"\n";
+		}
+		for(int d=0; d<DIM; d++){
+			std::cout<<"ic_stop["<<d<<"]\t"<<ic_stop[d]<<"\n";
+		}
+		for(int d=0; d<DIM; d++){
+			std::cout<<"cell_size["<<d<<"]\t"<<cell_size[d]<<"\n";
+		}
+		for(int d=0; d<DIM; d++){
+			std::cout<<"global_nc["<<d<<"]\t"<<global_nc[d]<<"\n";
+		}
+		for(int d=0; d<DIM; d++){
+			std::cout<<"local_nc["<<d<<"]\t"<<local_nc[d]<<"\n";
+		}
+		for(int d=0; d<DIM; d++){
+			std::cout<<"local_size["<<d<<"]\t"<<local_size[d]<<"\n";
+		}
+		for(int d=0; d<DIM; d++){
+			std::cout<<"ip["<<d<<"]\t\t"<<ip[d]<<"\n";
+		}
+	}
 //	status_output((char*)"ready to start");
 }
 
@@ -283,9 +334,9 @@ void SimProcess::create_cells(Cell* cells){
 	for (ic[1]=ic_start[1]-1; ic[1]<ic_stop[1]+1; ic[1]++){
 		for (ic[0]=ic_start[0]-1; ic[0]<ic_stop[0]+1; ic[0]++){
 			for (int d=0; d<DIM; d++){
-				p_cell_start[d]=start[d]+ic[d]*r_cut;
+				p_cell_start[d]=ic[d]*r_cut;
 			}
-			cells[local_index(ic, global_nc)].set_params(p_cell_start, index(ic, global_nc), r_cut);
+			cells[local_index(ic)].set_params(p_cell_start, index(ic, global_nc), r_cut);
 		}
 	}
 }
@@ -317,23 +368,23 @@ void SimProcess::communicate(Cell* cells){
 	int ic[DIM];
 	for(ic[1]=ic_start[1]-1; ic[1]<=ic_stop[1]+1; ic[1]++){
 		for(ic[0]=ic_start[0]-1; ic[0]<=ic_stop[0]+1; ic[0]++){
-			std::cout<<local_index(ic, global_nc)<<"\t";
-			cells[local_index(ic, global_nc)].deletePl();
+			std::cout<<local_index(ic)<<"\t";
+			cells[local_index(ic)].deletePl();
 		}
 		std::cout<<"\n";
 	}
 //	for(ic[1]=ic_start[1];ic[1]<=ic_stop[1]; ic[1]++){
 //		ic[0]=ic_start[0]-1;
-//		cells[local_index(ic, global_nc)]->deletePl();
+//		cells[local_index(ic)]->deletePl();
 //		ic[0]=ic_stop[0]+1;
-//		cells[local_index(ic, global_nc)]->deletePl();
+//		cells[local_index(ic)]->deletePl();
 //	}
 
 
 //	// For all cells: include adding in PL
 //	for(ic[1]=ic_start[1]-1; ic[1]<=ic_stop[1]+1; ic[1]++){
 //		for(ic[0]=ic_start[0]-1; ic[0]<=ic_stop[0]+1; ic[0]++){
-//			cells[local_index(ic, global_nc)]->adding_to_pl();
+//			cells[local_index(ic)]->adding_to_pl();
 //		}
 //	}
 
@@ -421,14 +472,17 @@ void SimProcess::communicate(int com_d, Cell* cells){
 }
 
 int SimProcess::get_num_p(int* icr_start, int* icr_stop, int com_d, int oth_d, Cell* cells){
-	int ic[DIM];
-	int num=0;
-	for(ic[oth_d]=icr_start[oth_d]; ic[oth_d]<=icr_stop[oth_d]; ic[oth_d]++){
-		for(ic[com_d]=icr_start[com_d]; ic[com_d]<=icr_stop[com_d]; ic[com_d]++){
-			num+=cells[local_index(ic, global_nc)].num_part;
-		}
-	}
-	return num;
+//	int ic[DIM];
+//	int num=0;
+//	if(rank==0) std::cout<<"--------------\n";
+//	for(ic[oth_d]=icr_start[oth_d]; ic[oth_d]<icr_stop[oth_d]; ic[oth_d]++){
+//		for(ic[com_d]=icr_start[com_d]; ic[com_d]<icr_stop[com_d]; ic[com_d]++){
+//			num+=cells[local_index(ic)].num_part;
+//			if(rank==0) std::cout<<"num_part\t"<<cells[local_index(ic)].num_part<<"\n";
+//		}
+//	}
+//	return num;
+	return num_part;
 }
 
 void SimProcess::pl_l_send_recv(int* send_pl_l, int* recv_pl_l, int com_d){
@@ -464,10 +518,10 @@ void SimProcess::uncodePl(real* recv_pl, int* icr_start, int*icr_stop, int com_d
 	ic[oth_d]=icr_start[oth_d];
 	ic[com_d]=icr_start[com_d];
 	while(pos<length_recv){
-		if(recv_pl[pos+2+com_d]<cells[local_index(ic, global_nc)].start[com_d]+cell_size[com_d]){
-			if(recv_pl[pos+3-com_d]<cells[local_index(ic, global_nc)].start[oth_d]+cell_size[oth_d]){
+		if(recv_pl[pos+2+com_d]<cells[local_index(ic)].start[com_d]+cell_size[com_d]){
+			if(recv_pl[pos+3-com_d]<cells[local_index(ic)].start[oth_d]+cell_size[oth_d]){
 				p=new Particle;
-				cells[local_index(ic, global_nc)].uncodePl(p, recv_pl, pos, size);
+				cells[local_index(ic)].uncodePl(p, recv_pl, pos, size);
 				pos+=size;
 			}
 		}else{
@@ -484,30 +538,176 @@ void SimProcess::uncodePl(real* recv_pl, int* icr_start, int*icr_stop, int com_d
 void SimProcess::code_pl(real* send_pl, int* icr_start, int* icr_stop, int com_d, int oth_d, int size, Cell* cells){
 	int ic[DIM];
 	int pos=0;
-	for(ic[oth_d]=icr_start[oth_d]; ic[oth_d]<=icr_stop[oth_d]; ic[oth_d]++){
-		for(ic[com_d]=icr_start[com_d]; ic[com_d]<=icr_stop[com_d]; ic[com_d]++){
-
-			cells[local_index(ic, global_nc)].code_pl(send_pl, pos, size);
+	for(ic[oth_d]=icr_start[oth_d]; ic[oth_d]<icr_stop[oth_d]; ic[oth_d]++){
+		for(ic[com_d]=icr_start[com_d]; ic[com_d]<icr_stop[com_d]; ic[com_d]++){
+			cells[local_index(ic)].code_pl(send_pl, pos, size);
 			pos+=size;
 		}
 	}
 }
 
-void SimProcess::initData(Cell* cells){
-	// One Particle in each Cell-Center
-	int ic[DIM];
-	Particle* p;
-	for (ic[1]=ic_start[1]; ic[1]<ic_stop[1]; ic[1]++){
-		for (ic[0]=ic_start[0]; ic[0]<ic_stop[0]; ic[0]++){
-			p=cells[local_index(ic, global_nc)].pl->p;
-			p=new Particle;
-			p->m=1;
-			p->id=index(ic, global_nc);
+void SimProcess::create_particles(ParticleList* new_pl, real* r_start, real* r_stop, real resolution){
+	real pos[DIM];
+	ParticleList* pl_iterate=new_pl;
+	for(pos[1]=r_start[1]; pos[1]<r_stop[1]; pos[1]+=resolution){
+		for(pos[0]=r_start[0]; pos[0]<r_stop[0]; pos[0]+=resolution){
+			pl_iterate->p=new Particle;
 			for(int d=0; d<DIM; d++){
-				p->V[d]=1;
-				p->X[d]=start[d]+0.5*cell_size[d];
+				pl_iterate->p->X[d]=pos[d];
+				pl_iterate->p->V[d]=0;
+			}
+			pl_iterate->p->V[1]=0.2;
+			if(!(pos[1]>=r_stop[1]&&pos[0]>=r_stop[0])){
+				pl_iterate->next=new ParticleList;
+				pl_iterate=pl_iterate->next;
+			}else{
+				pl_iterate->next=NULL;
 			}
 		}
+	}
+}
+
+void SimProcess::initData(Cell* cells){
+	MPI::Request request;
+	MPI::Status status;
+	if(rank==0){
+		// MASTER creates ParticleList containing all needed information
+		real r_start[DIM]={0, 0};
+		real r_stop[DIM]={10, global_size[1]};
+		real resolution=5;
+		ParticleList* to_insert=new ParticleList;
+		create_particles(to_insert, r_start, r_stop, resolution);
+
+		// Sort Particles in different ParticleLists
+		ParticleList* pl_i[global_np[0]*global_np[1]];
+			// iterators for each ParticleList
+		ParticleList* sorted_Particles[global_np[0]*global_np[1]];
+		int *pl_l[global_np[0]*global_np[1]];
+		for(int i=0; i<global_np[0]*global_np[1]; i++){
+			pl_l[i]=new int;
+			*pl_l[i]=0;
+			sorted_Particles[i]=new ParticleList;
+			pl_i[i]=sorted_Particles[i];
+		}
+
+		int proc[DIM];
+		int proc_idx=0;
+		ParticleList* tmp;
+		while(to_insert!=NULL){
+			if(to_insert->p==NULL){
+				to_insert=NULL;
+			}else{
+				proc[0]=0;proc[1]=0;
+				while(to_insert->p->X[0]>=(proc[0]+1)*local_size[0]){
+					proc[0]++;
+				}
+				while(to_insert->p->X[1]>=(proc[1]+1)*local_size[1]){
+					proc[1]++;
+				}
+//				std::cout<<"Position:\t"<<proc[0]<<" "<<proc[1]<<"\n";
+				proc_idx=index(proc, global_np);
+//				std::cout<<"Processor:\t"<<proc_idx<<"\n";
+//				std::cout<<"to_insert\t"<<to_insert<<"\n";
+//				std::cout<<"proc_idx:\t"<<proc_idx<<"\n";
+				tmp=to_insert;
+				to_insert=to_insert->next;
+				tmp->next=sorted_Particles[proc_idx];
+				sorted_Particles[proc_idx]=tmp;
+				*pl_l[proc_idx]+=1;
+
+			}
+		}
+		// Particles are send to the different Processes
+		// Sending number of Particles
+		for(int p=1; p<global_np[0]*global_np[1]; p++){
+			request=MPI::COMM_WORLD.Isend(pl_l[p], 1, MPI::INT, p, 1);
+			request.Wait(status);
+		}
+		// Sending Particles
+		for(int p=1; p<global_np[0]*global_np[1]; p++){
+			real cd_pl[*pl_l[p]*CD_P_SZE];
+			ParticleList* tmp;
+			tmp=sorted_Particles[p];
+//			std::cout<<"pl_l["<<p<<"]\t"<<*pl_l[p]<<"\n";
+			for(int i=0; i<*pl_l[p]*CD_P_SZE; i+=CD_P_SZE){
+				cd_pl[i]=(real) tmp->p->id;
+				if(CD_P_SZE>1) cd_pl[1+i]=tmp->p->X[0];
+				if(CD_P_SZE>2) cd_pl[2+i]=tmp->p->X[1];
+				if(CD_P_SZE>3) cd_pl[3+i]=tmp->p->V[0];
+				if(CD_P_SZE>4) cd_pl[4+i]=tmp->p->V[1];
+				if(CD_P_SZE>5) cd_pl[5+i]=tmp->p->m;
+				tmp=tmp->next;
+			}
+			request=MPI::COMM_WORLD.Isend(cd_pl, *pl_l[p]*CD_P_SZE, MPI::DOUBLE, p, 2);
+			request.Wait(status);
+		}
+		int ic[DIM];
+		tmp=sorted_Particles[0];
+//		std::cout<<"Anzahl pl in 0:\t"<<*pl_l[0]<<"\n";
+		for(int pos=0; pos<*pl_l[0]; pos++){
+			ic[0]=0;ic[1]=0;
+			while(tmp->p->X[0]>start[0]+cell_size[0]*ic[0]){
+				ic[0]++;
+			}
+			while(tmp->p->X[1]>start[1]+cell_size[1]*ic[1]){
+				ic[1]++;
+			}
+			sorted_Particles[0]=sorted_Particles[0]->next;
+			tmp->next=cells[local_index(ic)].pl;
+			cells[local_index(ic)].pl=tmp;
+			tmp=sorted_Particles[0];
+			cells[local_index(ic)].num_part++;
+			num_part++;
+		}
+	}else{
+		// waiting to receive particles
+		int* new_recv;
+		new_recv=new int;
+		*new_recv=0;
+		request=MPI::COMM_WORLD.Irecv(new_recv, 1, MPI::INT, 0, 1);
+		request.Wait(status);
+		num_part=*new_recv;
+		std::cout<<"Nr Particles in "<<rank<<":\t"<<num_part<<"\n";
+		delete new_recv;
+
+		// Receiving Particlelists
+		real cod_pl[CD_P_SZE*num_part];
+		request=MPI::COMM_WORLD.Irecv(cod_pl, CD_P_SZE*num_part, MPI::DOUBLE, 0, 2);
+		request.Wait(status);
+//
+		int ic[DIM]={ic_start[0],ic_start[1]};
+		Particle* p;
+		for(int pos=0; pos<CD_P_SZE*num_part; pos+=CD_P_SZE){
+			while(cod_pl[pos+1]>start[0]+cell_size[0]*ic[0]){
+				ic[0]++;
+			}
+			while(cod_pl[pos+2]>start[0]+cell_size[1]*ic[1]){
+				ic[1]++;
+			}
+			p=new Particle();
+			if(CD_P_SZE>1) p->X[0]=cod_pl[pos+1];
+			if(CD_P_SZE>2) p->X[1]=cod_pl[pos+2];
+			if(CD_P_SZE>3) p->V[0]=cod_pl[pos+3];
+			if(CD_P_SZE>4) p->V[1]=cod_pl[pos+4];
+			if(CD_P_SZE>5) p->m=cod_pl[pos+5];
+//			std::cout<<"Received Particle at Position:\t"<<p->X[0]<<"/"<<p->X[1]<<"\n";
+			cells[local_index(ic)].insertParticle(p);
+		}
+
+	}
+	if(rank==0){
+
+		int ic[DIM];
+//		for(ic[1]=ic_start[1]; ic[1]<ic_stop[1]; ic[1]++){
+//			for(ic[0]=ic_start[0]; ic[0]<ic_stop[0]; ic[0]++){
+//				std::cout<<"num P in Cell "<<local_index(ic)<<":\t"<<cells[local_index(ic)].num_part<<"\n";
+//			}
+//		}
+//		std::cout<<"Hier";
+//		for(int i=0; i<cells[6].num_part; i++){
+//			std::cout<<"Hallo:\t("<<cells[1].pl->p->X[0]<<"/"<<cells[1].pl->p->X[0]<<"\n";
+//		}
+//		std::cout<<"\n\n";
 	}
 }
 
@@ -537,12 +737,14 @@ int SimProcess::index(int* p, int* n){
 	return 0;
 }
 
-int SimProcess::local_index(int* p, int* n){
+int SimProcess::local_index(int* p){
 	int loc_p[DIM];
+	int loc_nc[DIM];
 	for(int d=0; d<DIM; d++){
 		loc_p[d]=p[d]-ic_start[d]+1;
+		loc_nc[d]=local_nc[d]+2;
 	}
-	return index(loc_p, local_nc);
+	return index(loc_p, loc_nc);
 }
 
 void SimProcess::status_output(std::string c){
@@ -555,7 +757,7 @@ void SimProcess::adding_to_pl(Cell* cells){
 	int ic[DIM];
 	for(ic[1]=ic_start[1]-1; ic[1]<=ic_stop[1]; ic[1]++){
 		for(ic[0]=ic_start[0]-1; ic[0]<=ic_stop[0]; ic[0]++){
-			cells[local_index(ic, global_nc)].adding_to_pl();
+			cells[local_index(ic)].adding_to_pl();
 		}
 	}
 }

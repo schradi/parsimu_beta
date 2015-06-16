@@ -21,6 +21,12 @@ public:
 	real start[DIM];		/**< Starting-Point of the cell */
 	int timestep;			/**< current timestep*/
 
+	Cell(real* p_cell_size, int p_id, real* p_start, int p_timestep);
+
+	Cell(real* p_cell_size);
+
+	Cell(){num_part=0;};
+
 	/**
 	 * Insert a new Particle in the Cell with specific datas
 	 */
@@ -31,6 +37,8 @@ public:
 	 * @param p_p pointer to existin particle
 	 */
 	void insertParticle(Particle* p_p);
+
+	void insertParticle(ParticleList* p_pl);
 
 	/**
 	 * Move all particles stored in adding to pl
