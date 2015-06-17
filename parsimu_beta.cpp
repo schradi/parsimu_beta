@@ -41,9 +41,9 @@ int main(int argc, char* argv[]) {
 	Cell cells[numc];
 	sim_p->create_cells(cells);
 	sim_p->initData(cells);
-	if(sim_p->rank==0){
-
-	}
+//	if(sim_p->rank==0){
+//
+//	}
 	real delta_t=0.5;
 	sim_p->t=0;
 	sim_p->output_resolution=10;
