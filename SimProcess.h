@@ -44,6 +44,7 @@ public:
 	real max_V;						/**< maximum of speed the particles are allowed to achieve*/
 	int output_resolution;
 	real t;
+	int np;
 
 	/**
 	 * Communication between the processes
@@ -169,12 +170,12 @@ public:
 	/**
 	 * Collect all pl of cells in a range and convert them to an array of double
 	 */
-	void code_pl(real* send_pl, int* icr_start, int* icr_stop, int com_d, int oth_d, int size, Cell* cells);
+	void code_pl(real* send_pl, int* icr_start, int* icr_stop, int size, Cell* cells);
 
 	/**
 	* Convert an array of double into Particles and sort them in cells in a specified range
 	*/
-	void uncodePl(real* recv_pl, int* icr_start, int*icr_stop, int com_d, int oth_d, int length_recv, int size, Cell* cells);
+	void uncodePl(real* recv_pl, int* icr_start, int*icr_stop, int length_recv, int size, Cell* cells);
 
 	/**
 	 * Send and receive a converted particle Cell to all neighboring processes in a direction
@@ -182,13 +183,15 @@ public:
 	 * @param send_pl converted List of particles to be send
 	 * @param recv_pl empty converted List of particles where the received particles will be stored
 	 */
-	void pl_send_recv(real* send_pl, int send_pl_l, real* recv_pl, int recv_pl_l, int com_d);
+	void pl_send_l(int* length, int recv_rank, int tag);
+	void pl_send(real* to_send, int recv_rank, int length, int tag);
+	void pl_recv_l(int* length, int send_rank, int tag);
+	void pl_recv(real* recv, int length, int send_rank, int tag);
+	void delete_pl(int* icr_start, int* icr_stop, Cell* cells);
 
-	int get_num_p(int* icr_start, int* icr_stop, int com_d, int oth_d, Cell* cells);
+	int get_num_p(int* icr_start, int* icr_stop, Cell* cells);
 
-	void pl_l_send_recv(int* send_pl_l, int* recv_pl_l, int com_d);
-
-	void create_particles(ParticleList* new_pl, real* r_start, real* r_stop, real resolution);
+	void create_particles(ParticleList* new_pl, real* r_start, real* r_stop, real resolution, real* p_V);
 };
 
 #endif /* SIMPROCESS_H_ */

@@ -23,6 +23,7 @@ public:
 struct ParticleList{
 	Particle* p;		/**< Paricle*/
 	ParticleList* next; /**< next ParticleList Item*/
+	ParticleList(){p=NULL; next=NULL;};
 };
 
 

@@ -1,0 +1,189 @@
+\hypertarget{class_cell}{\section{Cell Class Reference}
+\label{class_cell}\index{Cell@{Cell}}
+}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{class_cell_a68d76de23d77dd050d3e113db3091823}{insert\-Particle} (int p\-\_\-id, real p\-\_\-m, real $\ast$p\-\_\-\-X, real $\ast$p\-\_\-\-V)
+\item 
+void \hyperlink{class_cell_a5973afba19b7fc25be2852b27160a8fc}{insert\-Particle} (\hyperlink{struct_particle}{Particle} $\ast$p\-\_\-p)
+\item 
+void \hyperlink{class_cell_a2afe22df5392453b6fe60574782fd487}{adding\-\_\-to\-\_\-pl} ()
+\item 
+void \hyperlink{class_cell_abce9121af723a8f89f5266a3d7aa8739}{code\-\_\-pl} (real $\ast$cod\-\_\-pl, int pos)
+\item 
+void \hyperlink{class_cell_a8dcdd7c20cd2a432040b08b391e429ed}{uncode\-Pl} (\hyperlink{struct_particle}{Particle} $\ast$p, real $\ast$cod\-\_\-pl, int pos)
+\item 
+void \hyperlink{class_cell_ab45662260e77aedc20a7c1a0ed54c8d3}{delete\-Particle} (int p\-\_\-id)
+\item 
+void \hyperlink{class_cell_a7048e5b320828ca5939a431709a6b0d6}{delete\-Particle} (\hyperlink{struct_particle_list}{Particle\-List} $\ast$p\-\_\-pre, \hyperlink{struct_particle_list}{Particle\-List} $\ast$p\-\_\-del)
+\item 
+void \hyperlink{class_cell_a3bdc184e5d38f468c7cfb04505102134}{delete\-Pl} ()
+\item 
+\hyperlink{class_cell_ad27a69d728f137902642de1fa82a5715}{Cell} (real $\ast$p\-\_\-cs, int p\-\_\-id, real $\ast$p\-\_\-s)
+\item 
+\hyperlink{class_cell_a9fa559f7a28e2b4336c6879ca09304d8}{$\sim$\-Cell} ()
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{struct_particle_list}{Particle\-List} $\ast$ \hyperlink{class_cell_a04cf5ce1a21a004d661ebbc5feac3781}{adding}
+\item 
+real \hyperlink{class_cell_aed68c826e1acd12d3df96f640e17140e}{cell\-\_\-size} \mbox{[}D\-I\-M\mbox{]}
+\item 
+int \hyperlink{class_cell_a25f37241a10fa27bcdea7e939eea5efc}{id}
+\item 
+\hypertarget{class_cell_a3fb8304728b53aba7061c3c103d4e945}{int {\bfseries num\-\_\-part}}\label{class_cell_a3fb8304728b53aba7061c3c103d4e945}
+
+\item 
+\hyperlink{struct_particle_list}{Particle\-List} $\ast$ \hyperlink{class_cell_a747b00936db8b67a4a4c76553fd9f898}{pl}
+\item 
+real \hyperlink{class_cell_af8a3594281ee0ab62b3251c71321e028}{start} \mbox{[}D\-I\-M\mbox{]}
+\item 
+int \hyperlink{class_cell_a2588fe181c8c613fa58687c4ec810fd2}{timestep}
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{class_cell_ad27a69d728f137902642de1fa82a5715}{\index{Cell@{Cell}!Cell@{Cell}}
+\index{Cell@{Cell}!Cell@{Cell}}
+\subsubsection[{Cell}]{\setlength{\rightskip}{0pt plus 5cm}Cell\-::\-Cell (
+\begin{DoxyParamCaption}
+\item[{real $\ast$}]{p\-\_\-cs, }
+\item[{int}]{p\-\_\-id, }
+\item[{real $\ast$}]{p\-\_\-s}
+\end{DoxyParamCaption}
+)}}\label{class_cell_ad27a69d728f137902642de1fa82a5715}
+Constructor \hypertarget{class_cell_a9fa559f7a28e2b4336c6879ca09304d8}{\index{Cell@{Cell}!$\sim$\-Cell@{$\sim$\-Cell}}
+\index{$\sim$\-Cell@{$\sim$\-Cell}!Cell@{Cell}}
+\subsubsection[{$\sim$\-Cell}]{\setlength{\rightskip}{0pt plus 5cm}Cell\-::$\sim$\-Cell (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_cell_a9fa559f7a28e2b4336c6879ca09304d8}
+Destructor 
+
+\subsection{Member Function Documentation}
+\hypertarget{class_cell_a2afe22df5392453b6fe60574782fd487}{\index{Cell@{Cell}!adding\-\_\-to\-\_\-pl@{adding\-\_\-to\-\_\-pl}}
+\index{adding\-\_\-to\-\_\-pl@{adding\-\_\-to\-\_\-pl}!Cell@{Cell}}
+\subsubsection[{adding\-\_\-to\-\_\-pl}]{\setlength{\rightskip}{0pt plus 5cm}void Cell\-::adding\-\_\-to\-\_\-pl (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_cell_a2afe22df5392453b6fe60574782fd487}
+Move all particles stored in adding to pl Adding is empty afterwards \hypertarget{class_cell_abce9121af723a8f89f5266a3d7aa8739}{\index{Cell@{Cell}!code\-\_\-pl@{code\-\_\-pl}}
+\index{code\-\_\-pl@{code\-\_\-pl}!Cell@{Cell}}
+\subsubsection[{code\-\_\-pl}]{\setlength{\rightskip}{0pt plus 5cm}void Cell\-::code\-\_\-pl (
+\begin{DoxyParamCaption}
+\item[{real $\ast$}]{cod\-\_\-pl, }
+\item[{int}]{pos}
+\end{DoxyParamCaption}
+)}}\label{class_cell_abce9121af723a8f89f5266a3d7aa8739}
+convert a \hyperlink{struct_particle_list}{Particle\-List} in an array of double 
+\begin{DoxyParams}{Parameters}
+{\em cod\-\_\-pl} & the resulting array will be stored at the end of this vector \\
+\hline
+{\em pos} & current length of the vector \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_cell_ab45662260e77aedc20a7c1a0ed54c8d3}{\index{Cell@{Cell}!delete\-Particle@{delete\-Particle}}
+\index{delete\-Particle@{delete\-Particle}!Cell@{Cell}}
+\subsubsection[{delete\-Particle}]{\setlength{\rightskip}{0pt plus 5cm}void Cell\-::delete\-Particle (
+\begin{DoxyParamCaption}
+\item[{int}]{p\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{class_cell_ab45662260e77aedc20a7c1a0ed54c8d3}
+deletes a particle out o pl with an specific id 
+\begin{DoxyParams}{Parameters}
+{\em p\-\_\-id} & id of the particle to be deleteddeleting \hyperlink{struct_particle}{Particle} with id=p\-\_\-id (does nothing, if it doesn't contain it) \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_cell_a7048e5b320828ca5939a431709a6b0d6}{\index{Cell@{Cell}!delete\-Particle@{delete\-Particle}}
+\index{delete\-Particle@{delete\-Particle}!Cell@{Cell}}
+\subsubsection[{delete\-Particle}]{\setlength{\rightskip}{0pt plus 5cm}void Cell\-::delete\-Particle (
+\begin{DoxyParamCaption}
+\item[{{\bf Particle\-List} $\ast$}]{p\-\_\-pre, }
+\item[{{\bf Particle\-List} $\ast$}]{p\-\_\-del}
+\end{DoxyParamCaption}
+)}}\label{class_cell_a7048e5b320828ca5939a431709a6b0d6}
+deletes a \hyperlink{struct_particle_list}{Particle\-List} Item 
+\begin{DoxyParams}{Parameters}
+{\em p\-\_\-pre} & previous Particle\-List-\/\-Item \\
+\hline
+{\em p\-\_\-del} & Particle\-List-\/\-Item to be deleted \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_cell_a3bdc184e5d38f468c7cfb04505102134}{\index{Cell@{Cell}!delete\-Pl@{delete\-Pl}}
+\index{delete\-Pl@{delete\-Pl}!Cell@{Cell}}
+\subsubsection[{delete\-Pl}]{\setlength{\rightskip}{0pt plus 5cm}void Cell\-::delete\-Pl (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_cell_a3bdc184e5d38f468c7cfb04505102134}
+deletes the whole Paricle\-List pl \hypertarget{class_cell_a68d76de23d77dd050d3e113db3091823}{\index{Cell@{Cell}!insert\-Particle@{insert\-Particle}}
+\index{insert\-Particle@{insert\-Particle}!Cell@{Cell}}
+\subsubsection[{insert\-Particle}]{\setlength{\rightskip}{0pt plus 5cm}void Cell\-::insert\-Particle (
+\begin{DoxyParamCaption}
+\item[{int}]{p\-\_\-id, }
+\item[{real}]{p\-\_\-m, }
+\item[{real $\ast$}]{p\-\_\-\-X, }
+\item[{real $\ast$}]{p\-\_\-\-V}
+\end{DoxyParamCaption}
+)}}\label{class_cell_a68d76de23d77dd050d3e113db3091823}
+Insert a new \hyperlink{struct_particle}{Particle} in the \hyperlink{class_cell}{Cell} with specific datas \hypertarget{class_cell_a5973afba19b7fc25be2852b27160a8fc}{\index{Cell@{Cell}!insert\-Particle@{insert\-Particle}}
+\index{insert\-Particle@{insert\-Particle}!Cell@{Cell}}
+\subsubsection[{insert\-Particle}]{\setlength{\rightskip}{0pt plus 5cm}void Cell\-::insert\-Particle (
+\begin{DoxyParamCaption}
+\item[{{\bf Particle} $\ast$}]{p\-\_\-p}
+\end{DoxyParamCaption}
+)}}\label{class_cell_a5973afba19b7fc25be2852b27160a8fc}
+Copy a existing \hyperlink{struct_particle}{Particle} in the cell 
+\begin{DoxyParams}{Parameters}
+{\em p\-\_\-p} & pointer to existin particle \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_cell_a8dcdd7c20cd2a432040b08b391e429ed}{\index{Cell@{Cell}!uncode\-Pl@{uncode\-Pl}}
+\index{uncode\-Pl@{uncode\-Pl}!Cell@{Cell}}
+\subsubsection[{uncode\-Pl}]{\setlength{\rightskip}{0pt plus 5cm}void Cell\-::uncode\-Pl (
+\begin{DoxyParamCaption}
+\item[{{\bf Particle} $\ast$}]{p, }
+\item[{real $\ast$}]{cod\-\_\-pl, }
+\item[{int}]{pos}
+\end{DoxyParamCaption}
+)}}\label{class_cell_a8dcdd7c20cd2a432040b08b391e429ed}
+convert an array of double in an \hyperlink{struct_particle}{Particle} 
+\begin{DoxyParams}{Parameters}
+{\em p} & storage, where the \hyperlink{struct_particle}{Particle} will be stored \\
+\hline
+{\em cod\-\_\-pl} & converted array o double \\
+\hline
+{\em pos} & current starting-\/position of conversion \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Data Documentation}
+\hypertarget{class_cell_a04cf5ce1a21a004d661ebbc5feac3781}{\index{Cell@{Cell}!adding@{adding}}
+\index{adding@{adding}!Cell@{Cell}}
+\subsubsection[{adding}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Particle\-List}$\ast$ Cell\-::adding}}\label{class_cell_a04cf5ce1a21a004d661ebbc5feac3781}
+If \hyperlink{class_cell}{Cell} is part of the outer border this contains all Particles that entered the cell \hypertarget{class_cell_aed68c826e1acd12d3df96f640e17140e}{\index{Cell@{Cell}!cell\-\_\-size@{cell\-\_\-size}}
+\index{cell\-\_\-size@{cell\-\_\-size}!Cell@{Cell}}
+\subsubsection[{cell\-\_\-size}]{\setlength{\rightskip}{0pt plus 5cm}real Cell\-::cell\-\_\-size\mbox{[}D\-I\-M\mbox{]}}}\label{class_cell_aed68c826e1acd12d3df96f640e17140e}
+Cell-\/\-Width \hypertarget{class_cell_a25f37241a10fa27bcdea7e939eea5efc}{\index{Cell@{Cell}!id@{id}}
+\index{id@{id}!Cell@{Cell}}
+\subsubsection[{id}]{\setlength{\rightskip}{0pt plus 5cm}int Cell\-::id}}\label{class_cell_a25f37241a10fa27bcdea7e939eea5efc}
+cell-\/id \hypertarget{class_cell_a747b00936db8b67a4a4c76553fd9f898}{\index{Cell@{Cell}!pl@{pl}}
+\index{pl@{pl}!Cell@{Cell}}
+\subsubsection[{pl}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Particle\-List}$\ast$ Cell\-::pl}}\label{class_cell_a747b00936db8b67a4a4c76553fd9f898}
+List of Particles in the \hyperlink{class_cell}{Cell} \hypertarget{class_cell_af8a3594281ee0ab62b3251c71321e028}{\index{Cell@{Cell}!start@{start}}
+\index{start@{start}!Cell@{Cell}}
+\subsubsection[{start}]{\setlength{\rightskip}{0pt plus 5cm}real Cell\-::start\mbox{[}D\-I\-M\mbox{]}}}\label{class_cell_af8a3594281ee0ab62b3251c71321e028}
+Starting-\/\-Point of the cell \hypertarget{class_cell_a2588fe181c8c613fa58687c4ec810fd2}{\index{Cell@{Cell}!timestep@{timestep}}
+\index{timestep@{timestep}!Cell@{Cell}}
+\subsubsection[{timestep}]{\setlength{\rightskip}{0pt plus 5cm}int Cell\-::timestep}}\label{class_cell_a2588fe181c8c613fa58687c4ec810fd2}
+current timestep 
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+cell.\-h\item 
+cell.\-cpp\end{DoxyCompactItemize}

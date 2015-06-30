@@ -28,6 +28,12 @@ int main(int argc, char* argv[]) {
 			MPI::Finalize();
 			return 0;
 		}
+		if(global_np[d]%2!=0){
+			//Schachbrettmuster funktioniert sonst nicht, wird bei kommunikation benötigt
+			std::cout<<"\n-----ABORTED!-----\nwrong number of processes.\n\n";
+			MPI::Finalize();
+			return 0;
+		}
 	}
 	real global_size[DIM];
 	for(int d=0; d<DIM; d++){
@@ -40,16 +46,19 @@ int main(int argc, char* argv[]) {
 	int numc=(sim_p->local_nc[0]+2)*(sim_p->local_nc[1]+2);
 	Cell cells[numc];
 	sim_p->create_cells(cells);
+	MPI::COMM_WORLD.Barrier();
 	sim_p->initData(cells);
-//	if(sim_p->rank==0){
-//
-//	}
-	real delta_t=0.5;
+	real delta_t=1;
+	real t_end=1000;
 	sim_p->t=0;
-	sim_p->output_resolution=10;
+	sim_p->output_resolution=5;
 	sim_p->output(delta_t, cells);
+	MPI::COMM_WORLD.Barrier();
+	sim_p->communicate(cells);
 
-////	sim_p->timeIntegration();
+	MPI::COMM_WORLD.Barrier();
+
+	sim_p->timeIntegration(delta_t, t_end, cells);
 
 	MPI::Finalize();
 	return 0;

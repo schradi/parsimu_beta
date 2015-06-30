@@ -67,6 +67,7 @@ void Cell::insertParticle(Particle* p_p){
 void Cell::insertParticle(ParticleList* p_pl){
 	p_pl->next=pl;
 	pl=p_pl;
+	num_part++;
 }
 
 void Cell::code_pl(real* cod_pl, int pos, int size){
@@ -97,6 +98,7 @@ void Cell::deletePl(){
 	while(pl!=NULL){
 		tmp=pl;
 		pl=pl->next;
+		num_part--;
 		delete tmp;
 	}
 }
@@ -120,12 +122,16 @@ void Cell::deleteParticle(ParticleList* p_pre, ParticleList* p_del){
 }
 
 void Cell::adding_to_pl(){
-	ParticleList* tmp_pl;
-	tmp_pl=pl;
-	while(tmp_pl->next!=NULL){
-		tmp_pl=tmp_pl->next;
+	if(pl!=NULL){
+		ParticleList* tmp_pl;
+		tmp_pl=pl;
+		while(tmp_pl->next!=NULL){
+			tmp_pl=tmp_pl->next;
+		}
+		tmp_pl->next=adding;
+	}else{
+		pl=adding;
 	}
-	tmp_pl->next=adding;
 	adding=NULL;
 }
 

@@ -25,7 +25,7 @@ public:
 
 	Cell(real* p_cell_size);
 
-	Cell(){num_part=0;};
+	Cell(){num_part=0;adding=NULL;pl=NULL;};
 
 	/**
 	 * Insert a new Particle in the Cell with specific datas

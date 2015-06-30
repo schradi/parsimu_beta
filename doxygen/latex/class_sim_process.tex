@@ -1,0 +1,429 @@
+\hypertarget{class_sim_process}{\section{Sim\-Process Class Reference}
+\label{class_sim_process}\index{Sim\-Process@{Sim\-Process}}
+}
+
+
+{\ttfamily \#include $<$Sim\-Process.\-h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{class_sim_process_af170569cb5d5bc65bf0b67deab68839f}{communicate} ()
+\item 
+void \hyperlink{class_sim_process_a30d24be4528ae0124f1361728161fbbf}{communicate} (int com\-\_\-d)
+\item 
+void \hyperlink{class_sim_process_a9d0c150b73ae309c3e96ab382ab61f9e}{comp\-F} ()
+\item 
+void \hyperlink{class_sim_process_ab2679cc6243a3d4e81a5f5861184987b}{comp\-F} (\hyperlink{struct_particle}{Particle} $\ast$p\-\_\-i, \hyperlink{struct_particle}{Particle} $\ast$p\-\_\-j)
+\item 
+void \hyperlink{class_sim_process_abc49f8acd0c4270d51c15bc9f6652fc7}{comp\-V} ()
+\item 
+void \hyperlink{class_sim_process_a78b3218639bf7629fce8145b29980d3c}{comp\-X} ()
+\item 
+void \hyperlink{class_sim_process_a08f5a7ddd82b047ec1f84652c14830e0}{force} (real $\ast$p\-\_\-\-X)
+\item 
+int \hyperlink{class_sim_process_a0d2407147ec5be00e873af72a77f7203}{get\-Local\-Cell\-Id} (real $\ast$p\-\_\-\-X)
+\item 
+void \hyperlink{class_sim_process_ae6eca603294352ce686e35318276c230}{incl\-Particle} (\hyperlink{struct_particle}{Particle} $\ast$p)
+\item 
+int \hyperlink{class_sim_process_aa12b5bc940fd85d5665b759ac576edf6}{index} (int $\ast$p, int $\ast$n)
+\item 
+void \hyperlink{class_sim_process_ae1838f9b1ac92c6dcd8d41b1f970fa83}{init\-Data} ()
+\item 
+int \hyperlink{class_sim_process_a5bfb783797acec8f74e4eb403f67481f}{local\-\_\-index} (int $\ast$p, int $\ast$n)
+\item 
+\hypertarget{class_sim_process_ad1fb118fe2f4f9b3b730f33a386c84d6}{void {\bfseries match\-Outputs} ()}\label{class_sim_process_ad1fb118fe2f4f9b3b730f33a386c84d6}
+
+\item 
+void \hyperlink{class_sim_process_a0f5eea6cd2b560579fe1c0beeedc702d}{move\-Particles} ()
+\item 
+void \hyperlink{class_sim_process_a12d27ec08b5c192165a6ecb79c6aec4c}{gather\-\_\-outputs} ()
+\item 
+void \hyperlink{class_sim_process_af36c4baf32518f1460d0784ebbf6b50e}{output} ()
+\item 
+\hyperlink{class_sim_process_abdc4e29101d4abb10b8436aeaef77d46}{Sim\-Process} (real p\-\_\-delta\-\_\-t, real p\-\_\-r\-\_\-cut, real p\-\_\-t\-\_\-end, int $\ast$p\-\_\-global\-\_\-nc, real $\ast$p\-\_\-global\-\_\-size, real $\ast$p\-\_\-start)
+\item 
+\hyperlink{class_sim_process_a0f05e54804a935e6fbafb601efe33a7c}{$\sim$\-Sim\-Process} ()
+\item 
+void \hyperlink{class_sim_process_a5c26a474aaafe823f5b31a12e01d61b2}{status\-\_\-output} (char $\ast$c)
+\item 
+void \hyperlink{class_sim_process_ab193bf6bb9d89e122127b015cd900ff2}{time\-Integration} ()
+\item 
+void \hyperlink{class_sim_process_a8544f52c47dc17cf8ab85edd12ea77c5}{adding\-\_\-to\-\_\-pl} ()
+\item 
+void \hyperlink{class_sim_process_a004ae491059a84c4a3bd5d715e6f47ab}{code\-\_\-pl} (real $\ast$send\-\_\-pl, int $\ast$icr\-\_\-start, int $\ast$icr\-\_\-stop, int com\-\_\-d, int oth\-\_\-d)
+\item 
+void \hyperlink{class_sim_process_a3cb98183aafbb9faa5c41308591313f3}{uncode\-Pl} (real $\ast$recv\-\_\-pl, int $\ast$icr\-\_\-start, int $\ast$icr\-\_\-stop, int com\-\_\-d, int oth\-\_\-d, int length\-\_\-recv)
+\item 
+void \hyperlink{class_sim_process_a32261e45b09042ec658c84d0638bc5b1}{pl\-\_\-send\-\_\-recv} (real $\ast$send\-\_\-pl, real $\ast$recv\-\_\-pl, int com\-\_\-d)
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_sim_process_a1c6d3ba10262d0278267db46903f187f}{\hyperlink{class_cell}{Cell} $\ast$ {\bfseries cells} \mbox{[}16\mbox{]}}\label{class_sim_process_a1c6d3ba10262d0278267db46903f187f}
+
+\item 
+real \hyperlink{class_sim_process_acb71c08a7b0fc7ca809540f793421327}{cell\-\_\-size} \mbox{[}D\-I\-M\mbox{]}
+\item 
+real \hyperlink{class_sim_process_a1862e53aaf344ae900c797d8101de8c6}{delta\-\_\-t}
+\item 
+int \hyperlink{class_sim_process_a43ebeee5f1b854c9ee048a72d0d0a623}{global\-\_\-nc} \mbox{[}D\-I\-M\mbox{]}
+\item 
+real \hyperlink{class_sim_process_a3a30f5356527bf30f9cbf3f7b21f0316}{global\-\_\-size} \mbox{[}D\-I\-M\mbox{]}
+\item 
+int \hyperlink{class_sim_process_a629f7301a4a5fc34d75240fd53ba5266}{ic\-\_\-start} \mbox{[}D\-I\-M\mbox{]}
+\item 
+int \hyperlink{class_sim_process_a4cdde257ea292d400576dbd8e36f8cde}{ic\-\_\-stop} \mbox{[}D\-I\-M\mbox{]}
+\item 
+int \hyperlink{class_sim_process_a258e3fa7cfc226d61d940de1599dfa2a}{ip} \mbox{[}D\-I\-M\mbox{]}
+\item 
+int \hyperlink{class_sim_process_a289a9950d641f552152ed2c124978839}{local\-\_\-nc} \mbox{[}D\-I\-M\mbox{]}
+\item 
+real \hyperlink{class_sim_process_a4694d23dff9f83ae985f8dfbfa2939cb}{local\-\_\-size} \mbox{[}D\-I\-M\mbox{]}
+\item 
+int \hyperlink{class_sim_process_a6ae71932cae5aff19988c1192ec4f67b}{neigh\-\_\-lower} \mbox{[}D\-I\-M\mbox{]}
+\item 
+int \hyperlink{class_sim_process_ada0a3a713c8996789bb3a492d9270957}{neigh\-\_\-upper} \mbox{[}D\-I\-M\mbox{]}
+\item 
+int \hyperlink{class_sim_process_aa8d2ec90bd4b578d85a7668bb890b6e5}{np} \mbox{[}D\-I\-M\mbox{]}
+\item 
+int \hyperlink{class_sim_process_abaafb96c0e7dfea4a845266511edebaa}{num\-\_\-part}
+\item 
+int \hyperlink{class_sim_process_a61c8c83a418419c93c7b78ddc7619fe3}{rank}
+\item 
+real \hyperlink{class_sim_process_a20db5f22c2255a68a332b950897cbdb0}{r\-\_\-cut}
+\item 
+real \hyperlink{class_sim_process_a0ccee10b1ffc00cc7846c4530f8e0357}{start} \mbox{[}D\-I\-M\mbox{]}
+\item 
+real \hyperlink{class_sim_process_aa9b2269bf9f85fa0f8bc7aa7932ef046}{t\-\_\-end}
+\item 
+real \hyperlink{class_sim_process_a7f1db440fa09d4e6826a552602724e76}{max\-\_\-\-V}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+todo\-: Class Description \hyperlink{class_sim_process}{Sim\-Process} 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{class_sim_process_abdc4e29101d4abb10b8436aeaef77d46}{\index{Sim\-Process@{Sim\-Process}!Sim\-Process@{Sim\-Process}}
+\index{Sim\-Process@{Sim\-Process}!SimProcess@{Sim\-Process}}
+\subsubsection[{Sim\-Process}]{\setlength{\rightskip}{0pt plus 5cm}Sim\-Process\-::\-Sim\-Process (
+\begin{DoxyParamCaption}
+\item[{real}]{p\-\_\-delta\-\_\-t, }
+\item[{real}]{p\-\_\-r\-\_\-cut, }
+\item[{real}]{p\-\_\-t\-\_\-end, }
+\item[{int $\ast$}]{p\-\_\-global\-\_\-nc, }
+\item[{real $\ast$}]{p\-\_\-global\-\_\-size, }
+\item[{real $\ast$}]{p\-\_\-start}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_abdc4e29101d4abb10b8436aeaef77d46}
+Constructor \hypertarget{class_sim_process_a0f05e54804a935e6fbafb601efe33a7c}{\index{Sim\-Process@{Sim\-Process}!$\sim$\-Sim\-Process@{$\sim$\-Sim\-Process}}
+\index{$\sim$\-Sim\-Process@{$\sim$\-Sim\-Process}!SimProcess@{Sim\-Process}}
+\subsubsection[{$\sim$\-Sim\-Process}]{\setlength{\rightskip}{0pt plus 5cm}Sim\-Process\-::$\sim$\-Sim\-Process (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_a0f05e54804a935e6fbafb601efe33a7c}
+Destructor 
+
+\subsection{Member Function Documentation}
+\hypertarget{class_sim_process_a8544f52c47dc17cf8ab85edd12ea77c5}{\index{Sim\-Process@{Sim\-Process}!adding\-\_\-to\-\_\-pl@{adding\-\_\-to\-\_\-pl}}
+\index{adding\-\_\-to\-\_\-pl@{adding\-\_\-to\-\_\-pl}!SimProcess@{Sim\-Process}}
+\subsubsection[{adding\-\_\-to\-\_\-pl}]{\setlength{\rightskip}{0pt plus 5cm}void Sim\-Process\-::adding\-\_\-to\-\_\-pl (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_a8544f52c47dc17cf8ab85edd12ea77c5}
+All Particles stored in adding are put in pl, adding = N\-U\-L\-L \hypertarget{class_sim_process_a004ae491059a84c4a3bd5d715e6f47ab}{\index{Sim\-Process@{Sim\-Process}!code\-\_\-pl@{code\-\_\-pl}}
+\index{code\-\_\-pl@{code\-\_\-pl}!SimProcess@{Sim\-Process}}
+\subsubsection[{code\-\_\-pl}]{\setlength{\rightskip}{0pt plus 5cm}void Sim\-Process\-::code\-\_\-pl (
+\begin{DoxyParamCaption}
+\item[{real $\ast$}]{send\-\_\-pl, }
+\item[{int $\ast$}]{icr\-\_\-start, }
+\item[{int $\ast$}]{icr\-\_\-stop, }
+\item[{int}]{com\-\_\-d, }
+\item[{int}]{oth\-\_\-d}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_a004ae491059a84c4a3bd5d715e6f47ab}
+Collect all pl of cells in a range and convert them to an array of double \hypertarget{class_sim_process_af170569cb5d5bc65bf0b67deab68839f}{\index{Sim\-Process@{Sim\-Process}!communicate@{communicate}}
+\index{communicate@{communicate}!SimProcess@{Sim\-Process}}
+\subsubsection[{communicate}]{\setlength{\rightskip}{0pt plus 5cm}void Sim\-Process\-::communicate (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_af170569cb5d5bc65bf0b67deab68839f}
+Communication between the processes \hypertarget{class_sim_process_a30d24be4528ae0124f1361728161fbbf}{\index{Sim\-Process@{Sim\-Process}!communicate@{communicate}}
+\index{communicate@{communicate}!SimProcess@{Sim\-Process}}
+\subsubsection[{communicate}]{\setlength{\rightskip}{0pt plus 5cm}void Sim\-Process\-::communicate (
+\begin{DoxyParamCaption}
+\item[{int}]{com\-\_\-d}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_a30d24be4528ae0124f1361728161fbbf}
+Communication between the processes in a specific Dimension 
+\begin{DoxyParams}{Parameters}
+{\em com\-\_\-d} & specific dimension \\
+\hline
+\end{DoxyParams}
+communication to the right
+
+communication to the left\hypertarget{class_sim_process_a9d0c150b73ae309c3e96ab382ab61f9e}{\index{Sim\-Process@{Sim\-Process}!comp\-F@{comp\-F}}
+\index{comp\-F@{comp\-F}!SimProcess@{Sim\-Process}}
+\subsubsection[{comp\-F}]{\setlength{\rightskip}{0pt plus 5cm}void Sim\-Process\-::comp\-F (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_a9d0c150b73ae309c3e96ab382ab61f9e}
+Calculates the Force between all Particles within the Cells of this Process \hypertarget{class_sim_process_ab2679cc6243a3d4e81a5f5861184987b}{\index{Sim\-Process@{Sim\-Process}!comp\-F@{comp\-F}}
+\index{comp\-F@{comp\-F}!SimProcess@{Sim\-Process}}
+\subsubsection[{comp\-F}]{\setlength{\rightskip}{0pt plus 5cm}void Sim\-Process\-::comp\-F (
+\begin{DoxyParamCaption}
+\item[{{\bf Particle} $\ast$}]{p\-\_\-i, }
+\item[{{\bf Particle} $\ast$}]{p\-\_\-j}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_ab2679cc6243a3d4e81a5f5861184987b}
+Calculates the Force between two specific Particles The force will be added to the force saved in the particle 
+\begin{DoxyParams}{Parameters}
+{\em p\-\_\-i} & \hyperlink{struct_particle}{Particle} no 1 \\
+\hline
+{\em p\-\_\-j} & \hyperlink{struct_particle}{Particle} no 2 \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_sim_process_abc49f8acd0c4270d51c15bc9f6652fc7}{\index{Sim\-Process@{Sim\-Process}!comp\-V@{comp\-V}}
+\index{comp\-V@{comp\-V}!SimProcess@{Sim\-Process}}
+\subsubsection[{comp\-V}]{\setlength{\rightskip}{0pt plus 5cm}void Sim\-Process\-::comp\-V (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_abc49f8acd0c4270d51c15bc9f6652fc7}
+Calculates the new Velocity of the particles caused by the new force 
+\begin{DoxyParams}{Parameters}
+{\em delta\-\_\-t} & is the lenght of the timestep \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_sim_process_a78b3218639bf7629fce8145b29980d3c}{\index{Sim\-Process@{Sim\-Process}!comp\-X@{comp\-X}}
+\index{comp\-X@{comp\-X}!SimProcess@{Sim\-Process}}
+\subsubsection[{comp\-X}]{\setlength{\rightskip}{0pt plus 5cm}void Sim\-Process\-::comp\-X (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_a78b3218639bf7629fce8145b29980d3c}
+Calculates the new Position of the particle caused by the new velocity 
+\begin{DoxyParams}{Parameters}
+{\em delta\-\_\-t} & is the lenght of the timestep \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_sim_process_a08f5a7ddd82b047ec1f84652c14830e0}{\index{Sim\-Process@{Sim\-Process}!force@{force}}
+\index{force@{force}!SimProcess@{Sim\-Process}}
+\subsubsection[{force}]{\setlength{\rightskip}{0pt plus 5cm}void Sim\-Process\-::force (
+\begin{DoxyParamCaption}
+\item[{real $\ast$}]{p\-\_\-\-X}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_a08f5a7ddd82b047ec1f84652c14830e0}
+Calculates the force caused by the Lennard-\/\-Jones-\/\-Potential in a distance of p\-\_\-\-X 
+\begin{DoxyParams}{Parameters}
+{\em p\-\_\-\-X} & Position of which the responsible process in needed \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+rank of the process responsible for the Position p\-\_\-\-X 
+\end{DoxyReturn}
+$<$ Parameter sigma for the Lennard-\/\-Jones-\/\-Potential
+
+$<$ Parameter epsilon for the Lennard-\/\-Jones-\/\-Potential
+
+$<$ length \hypertarget{class_sim_process_a12d27ec08b5c192165a6ecb79c6aec4c}{\index{Sim\-Process@{Sim\-Process}!gather\-\_\-outputs@{gather\-\_\-outputs}}
+\index{gather\-\_\-outputs@{gather\-\_\-outputs}!SimProcess@{Sim\-Process}}
+\subsubsection[{gather\-\_\-outputs}]{\setlength{\rightskip}{0pt plus 5cm}void Sim\-Process\-::gather\-\_\-outputs (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_a12d27ec08b5c192165a6ecb79c6aec4c}
+Collects all outputs of the single processes in one process Process 0 creates the final output \hypertarget{class_sim_process_a0d2407147ec5be00e873af72a77f7203}{\index{Sim\-Process@{Sim\-Process}!get\-Local\-Cell\-Id@{get\-Local\-Cell\-Id}}
+\index{get\-Local\-Cell\-Id@{get\-Local\-Cell\-Id}!SimProcess@{Sim\-Process}}
+\subsubsection[{get\-Local\-Cell\-Id}]{\setlength{\rightskip}{0pt plus 5cm}int Sim\-Process\-::get\-Local\-Cell\-Id (
+\begin{DoxyParamCaption}
+\item[{real $\ast$}]{p\-\_\-\-X}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_a0d2407147ec5be00e873af72a77f7203}
+Returns the id of the cell responsible for the Position p\-\_\-\-X 
+\begin{DoxyParams}{Parameters}
+{\em p\-\_\-\-X} & Position of which the responsible process in needed \\
+\hline
+{\em id} & where the new Position will be stored \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_sim_process_ae6eca603294352ce686e35318276c230}{\index{Sim\-Process@{Sim\-Process}!incl\-Particle@{incl\-Particle}}
+\index{incl\-Particle@{incl\-Particle}!SimProcess@{Sim\-Process}}
+\subsubsection[{incl\-Particle}]{\setlength{\rightskip}{0pt plus 5cm}void Sim\-Process\-::incl\-Particle (
+\begin{DoxyParamCaption}
+\item[{{\bf Particle} $\ast$}]{p}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_ae6eca603294352ce686e35318276c230}
+Create a new \hyperlink{struct_particle}{Particle} 
+\begin{DoxyParams}{Parameters}
+{\em p} & place, where new particle will be stored \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_sim_process_aa12b5bc940fd85d5665b759ac576edf6}{\index{Sim\-Process@{Sim\-Process}!index@{index}}
+\index{index@{index}!SimProcess@{Sim\-Process}}
+\subsubsection[{index}]{\setlength{\rightskip}{0pt plus 5cm}int Sim\-Process\-::index (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{p, }
+\item[{int $\ast$}]{n}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_aa12b5bc940fd85d5665b759ac576edf6}
+Calculates the global index out of a global position 
+\begin{DoxyParams}{Parameters}
+{\em p} & current position \\
+\hline
+{\em n} & global size \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_sim_process_ae1838f9b1ac92c6dcd8d41b1f970fa83}{\index{Sim\-Process@{Sim\-Process}!init\-Data@{init\-Data}}
+\index{init\-Data@{init\-Data}!SimProcess@{Sim\-Process}}
+\subsubsection[{init\-Data}]{\setlength{\rightskip}{0pt plus 5cm}void Sim\-Process\-::init\-Data (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_ae1838f9b1ac92c6dcd8d41b1f970fa83}
+Include Data \hypertarget{class_sim_process_a5bfb783797acec8f74e4eb403f67481f}{\index{Sim\-Process@{Sim\-Process}!local\-\_\-index@{local\-\_\-index}}
+\index{local\-\_\-index@{local\-\_\-index}!SimProcess@{Sim\-Process}}
+\subsubsection[{local\-\_\-index}]{\setlength{\rightskip}{0pt plus 5cm}int Sim\-Process\-::local\-\_\-index (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{p, }
+\item[{int $\ast$}]{n}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_a5bfb783797acec8f74e4eb403f67481f}
+Calculates the local index out of a global position 
+\begin{DoxyParams}{Parameters}
+{\em p} & current position \\
+\hline
+{\em n} & global size \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_sim_process_a0f5eea6cd2b560579fe1c0beeedc702d}{\index{Sim\-Process@{Sim\-Process}!move\-Particles@{move\-Particles}}
+\index{move\-Particles@{move\-Particles}!SimProcess@{Sim\-Process}}
+\subsubsection[{move\-Particles}]{\setlength{\rightskip}{0pt plus 5cm}void Sim\-Process\-::move\-Particles (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_a0f5eea6cd2b560579fe1c0beeedc702d}
+Puts particles in right cells \hypertarget{class_sim_process_af36c4baf32518f1460d0784ebbf6b50e}{\index{Sim\-Process@{Sim\-Process}!output@{output}}
+\index{output@{output}!SimProcess@{Sim\-Process}}
+\subsubsection[{output}]{\setlength{\rightskip}{0pt plus 5cm}void Sim\-Process\-::output (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_af36c4baf32518f1460d0784ebbf6b50e}
+Saves all needed particleinformation calculated within this process \hypertarget{class_sim_process_a32261e45b09042ec658c84d0638bc5b1}{\index{Sim\-Process@{Sim\-Process}!pl\-\_\-send\-\_\-recv@{pl\-\_\-send\-\_\-recv}}
+\index{pl\-\_\-send\-\_\-recv@{pl\-\_\-send\-\_\-recv}!SimProcess@{Sim\-Process}}
+\subsubsection[{pl\-\_\-send\-\_\-recv}]{\setlength{\rightskip}{0pt plus 5cm}void Sim\-Process\-::pl\-\_\-send\-\_\-recv (
+\begin{DoxyParamCaption}
+\item[{real $\ast$}]{send\-\_\-pl, }
+\item[{real $\ast$}]{recv\-\_\-pl, }
+\item[{int}]{com\-\_\-d}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_a32261e45b09042ec658c84d0638bc5b1}
+Send and receive a converted particle \hyperlink{class_cell}{Cell} to all neighboring processes in a direction 
+\begin{DoxyParams}{Parameters}
+{\em com\-\_\-d} & specific direction \\
+\hline
+{\em send\-\_\-pl} & converted List of particles to be send \\
+\hline
+{\em recv\-\_\-pl} & empty converted List of particles where the received particles will be stored \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_sim_process_a5c26a474aaafe823f5b31a12e01d61b2}{\index{Sim\-Process@{Sim\-Process}!status\-\_\-output@{status\-\_\-output}}
+\index{status\-\_\-output@{status\-\_\-output}!SimProcess@{Sim\-Process}}
+\subsubsection[{status\-\_\-output}]{\setlength{\rightskip}{0pt plus 5cm}void Sim\-Process\-::status\-\_\-output (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{c}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_a5c26a474aaafe823f5b31a12e01d61b2}
+Prints a status during the calculation 
+\begin{DoxyParams}{Parameters}
+{\em c} & output textline \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_sim_process_ab193bf6bb9d89e122127b015cd900ff2}{\index{Sim\-Process@{Sim\-Process}!time\-Integration@{time\-Integration}}
+\index{time\-Integration@{time\-Integration}!SimProcess@{Sim\-Process}}
+\subsubsection[{time\-Integration}]{\setlength{\rightskip}{0pt plus 5cm}void Sim\-Process\-::time\-Integration (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_ab193bf6bb9d89e122127b015cd900ff2}
+Calculates the next timestep \hypertarget{class_sim_process_a3cb98183aafbb9faa5c41308591313f3}{\index{Sim\-Process@{Sim\-Process}!uncode\-Pl@{uncode\-Pl}}
+\index{uncode\-Pl@{uncode\-Pl}!SimProcess@{Sim\-Process}}
+\subsubsection[{uncode\-Pl}]{\setlength{\rightskip}{0pt plus 5cm}void Sim\-Process\-::uncode\-Pl (
+\begin{DoxyParamCaption}
+\item[{real $\ast$}]{recv\-\_\-pl, }
+\item[{int $\ast$}]{icr\-\_\-start, }
+\item[{int $\ast$}]{icr\-\_\-stop, }
+\item[{int}]{com\-\_\-d, }
+\item[{int}]{oth\-\_\-d, }
+\item[{int}]{length\-\_\-recv}
+\end{DoxyParamCaption}
+)}}\label{class_sim_process_a3cb98183aafbb9faa5c41308591313f3}
+Convert an array of double into Particles and sort them in cells in a specified range 
+
+\subsection{Member Data Documentation}
+\hypertarget{class_sim_process_acb71c08a7b0fc7ca809540f793421327}{\index{Sim\-Process@{Sim\-Process}!cell\-\_\-size@{cell\-\_\-size}}
+\index{cell\-\_\-size@{cell\-\_\-size}!SimProcess@{Sim\-Process}}
+\subsubsection[{cell\-\_\-size}]{\setlength{\rightskip}{0pt plus 5cm}real Sim\-Process\-::cell\-\_\-size\mbox{[}D\-I\-M\mbox{]}}}\label{class_sim_process_acb71c08a7b0fc7ca809540f793421327}
+Width of each cell \hypertarget{class_sim_process_a1862e53aaf344ae900c797d8101de8c6}{\index{Sim\-Process@{Sim\-Process}!delta\-\_\-t@{delta\-\_\-t}}
+\index{delta\-\_\-t@{delta\-\_\-t}!SimProcess@{Sim\-Process}}
+\subsubsection[{delta\-\_\-t}]{\setlength{\rightskip}{0pt plus 5cm}real Sim\-Process\-::delta\-\_\-t}}\label{class_sim_process_a1862e53aaf344ae900c797d8101de8c6}
+length of each timestep \hypertarget{class_sim_process_a43ebeee5f1b854c9ee048a72d0d0a623}{\index{Sim\-Process@{Sim\-Process}!global\-\_\-nc@{global\-\_\-nc}}
+\index{global\-\_\-nc@{global\-\_\-nc}!SimProcess@{Sim\-Process}}
+\subsubsection[{global\-\_\-nc}]{\setlength{\rightskip}{0pt plus 5cm}int Sim\-Process\-::global\-\_\-nc\mbox{[}D\-I\-M\mbox{]}}}\label{class_sim_process_a43ebeee5f1b854c9ee048a72d0d0a623}
+Global number of cells \hypertarget{class_sim_process_a3a30f5356527bf30f9cbf3f7b21f0316}{\index{Sim\-Process@{Sim\-Process}!global\-\_\-size@{global\-\_\-size}}
+\index{global\-\_\-size@{global\-\_\-size}!SimProcess@{Sim\-Process}}
+\subsubsection[{global\-\_\-size}]{\setlength{\rightskip}{0pt plus 5cm}real Sim\-Process\-::global\-\_\-size\mbox{[}D\-I\-M\mbox{]}}}\label{class_sim_process_a3a30f5356527bf30f9cbf3f7b21f0316}
+Size of the simulated area \hypertarget{class_sim_process_a629f7301a4a5fc34d75240fd53ba5266}{\index{Sim\-Process@{Sim\-Process}!ic\-\_\-start@{ic\-\_\-start}}
+\index{ic\-\_\-start@{ic\-\_\-start}!SimProcess@{Sim\-Process}}
+\subsubsection[{ic\-\_\-start}]{\setlength{\rightskip}{0pt plus 5cm}int Sim\-Process\-::ic\-\_\-start\mbox{[}D\-I\-M\mbox{]}}}\label{class_sim_process_a629f7301a4a5fc34d75240fd53ba5266}
+lowest cell-\/index in this process \hypertarget{class_sim_process_a4cdde257ea292d400576dbd8e36f8cde}{\index{Sim\-Process@{Sim\-Process}!ic\-\_\-stop@{ic\-\_\-stop}}
+\index{ic\-\_\-stop@{ic\-\_\-stop}!SimProcess@{Sim\-Process}}
+\subsubsection[{ic\-\_\-stop}]{\setlength{\rightskip}{0pt plus 5cm}int Sim\-Process\-::ic\-\_\-stop\mbox{[}D\-I\-M\mbox{]}}}\label{class_sim_process_a4cdde257ea292d400576dbd8e36f8cde}
+highest cell-\/index in this process \hypertarget{class_sim_process_a258e3fa7cfc226d61d940de1599dfa2a}{\index{Sim\-Process@{Sim\-Process}!ip@{ip}}
+\index{ip@{ip}!SimProcess@{Sim\-Process}}
+\subsubsection[{ip}]{\setlength{\rightskip}{0pt plus 5cm}int Sim\-Process\-::ip\mbox{[}D\-I\-M\mbox{]}}}\label{class_sim_process_a258e3fa7cfc226d61d940de1599dfa2a}
+Position of this Process in map of Processes \hypertarget{class_sim_process_a289a9950d641f552152ed2c124978839}{\index{Sim\-Process@{Sim\-Process}!local\-\_\-nc@{local\-\_\-nc}}
+\index{local\-\_\-nc@{local\-\_\-nc}!SimProcess@{Sim\-Process}}
+\subsubsection[{local\-\_\-nc}]{\setlength{\rightskip}{0pt plus 5cm}int Sim\-Process\-::local\-\_\-nc\mbox{[}D\-I\-M\mbox{]}}}\label{class_sim_process_a289a9950d641f552152ed2c124978839}
+Number of cells within this Process \hypertarget{class_sim_process_a4694d23dff9f83ae985f8dfbfa2939cb}{\index{Sim\-Process@{Sim\-Process}!local\-\_\-size@{local\-\_\-size}}
+\index{local\-\_\-size@{local\-\_\-size}!SimProcess@{Sim\-Process}}
+\subsubsection[{local\-\_\-size}]{\setlength{\rightskip}{0pt plus 5cm}real Sim\-Process\-::local\-\_\-size\mbox{[}D\-I\-M\mbox{]}}}\label{class_sim_process_a4694d23dff9f83ae985f8dfbfa2939cb}
+Size of the simulated area in this Process \hypertarget{class_sim_process_a7f1db440fa09d4e6826a552602724e76}{\index{Sim\-Process@{Sim\-Process}!max\-\_\-\-V@{max\-\_\-\-V}}
+\index{max\-\_\-\-V@{max\-\_\-\-V}!SimProcess@{Sim\-Process}}
+\subsubsection[{max\-\_\-\-V}]{\setlength{\rightskip}{0pt plus 5cm}real Sim\-Process\-::max\-\_\-\-V}}\label{class_sim_process_a7f1db440fa09d4e6826a552602724e76}
+maximum of speed the particles are allowed to achieve \hypertarget{class_sim_process_a6ae71932cae5aff19988c1192ec4f67b}{\index{Sim\-Process@{Sim\-Process}!neigh\-\_\-lower@{neigh\-\_\-lower}}
+\index{neigh\-\_\-lower@{neigh\-\_\-lower}!SimProcess@{Sim\-Process}}
+\subsubsection[{neigh\-\_\-lower}]{\setlength{\rightskip}{0pt plus 5cm}int Sim\-Process\-::neigh\-\_\-lower\mbox{[}D\-I\-M\mbox{]}}}\label{class_sim_process_a6ae71932cae5aff19988c1192ec4f67b}
+Rank of the lower neighboring processes in each direction \hypertarget{class_sim_process_ada0a3a713c8996789bb3a492d9270957}{\index{Sim\-Process@{Sim\-Process}!neigh\-\_\-upper@{neigh\-\_\-upper}}
+\index{neigh\-\_\-upper@{neigh\-\_\-upper}!SimProcess@{Sim\-Process}}
+\subsubsection[{neigh\-\_\-upper}]{\setlength{\rightskip}{0pt plus 5cm}int Sim\-Process\-::neigh\-\_\-upper\mbox{[}D\-I\-M\mbox{]}}}\label{class_sim_process_ada0a3a713c8996789bb3a492d9270957}
+Rank of the lower neighboring processes in each direction \hypertarget{class_sim_process_aa8d2ec90bd4b578d85a7668bb890b6e5}{\index{Sim\-Process@{Sim\-Process}!np@{np}}
+\index{np@{np}!SimProcess@{Sim\-Process}}
+\subsubsection[{np}]{\setlength{\rightskip}{0pt plus 5cm}int Sim\-Process\-::np\mbox{[}D\-I\-M\mbox{]}}}\label{class_sim_process_aa8d2ec90bd4b578d85a7668bb890b6e5}
+Number of running Processes \hypertarget{class_sim_process_abaafb96c0e7dfea4a845266511edebaa}{\index{Sim\-Process@{Sim\-Process}!num\-\_\-part@{num\-\_\-part}}
+\index{num\-\_\-part@{num\-\_\-part}!SimProcess@{Sim\-Process}}
+\subsubsection[{num\-\_\-part}]{\setlength{\rightskip}{0pt plus 5cm}int Sim\-Process\-::num\-\_\-part}}\label{class_sim_process_abaafb96c0e7dfea4a845266511edebaa}
+Number of particles within this process \hypertarget{class_sim_process_a20db5f22c2255a68a332b950897cbdb0}{\index{Sim\-Process@{Sim\-Process}!r\-\_\-cut@{r\-\_\-cut}}
+\index{r\-\_\-cut@{r\-\_\-cut}!SimProcess@{Sim\-Process}}
+\subsubsection[{r\-\_\-cut}]{\setlength{\rightskip}{0pt plus 5cm}real Sim\-Process\-::r\-\_\-cut}}\label{class_sim_process_a20db5f22c2255a68a332b950897cbdb0}
+cutting-\/radius for short-\/range forces \hypertarget{class_sim_process_a61c8c83a418419c93c7b78ddc7619fe3}{\index{Sim\-Process@{Sim\-Process}!rank@{rank}}
+\index{rank@{rank}!SimProcess@{Sim\-Process}}
+\subsubsection[{rank}]{\setlength{\rightskip}{0pt plus 5cm}int Sim\-Process\-::rank}}\label{class_sim_process_a61c8c83a418419c93c7b78ddc7619fe3}
+Rank of this Process \hypertarget{class_sim_process_a0ccee10b1ffc00cc7846c4530f8e0357}{\index{Sim\-Process@{Sim\-Process}!start@{start}}
+\index{start@{start}!SimProcess@{Sim\-Process}}
+\subsubsection[{start}]{\setlength{\rightskip}{0pt plus 5cm}real Sim\-Process\-::start\mbox{[}D\-I\-M\mbox{]}}}\label{class_sim_process_a0ccee10b1ffc00cc7846c4530f8e0357}
+Starting-\/\-Point of this Process (left down point) \hypertarget{class_sim_process_aa9b2269bf9f85fa0f8bc7aa7932ef046}{\index{Sim\-Process@{Sim\-Process}!t\-\_\-end@{t\-\_\-end}}
+\index{t\-\_\-end@{t\-\_\-end}!SimProcess@{Sim\-Process}}
+\subsubsection[{t\-\_\-end}]{\setlength{\rightskip}{0pt plus 5cm}real Sim\-Process\-::t\-\_\-end}}\label{class_sim_process_aa9b2269bf9f85fa0f8bc7aa7932ef046}
+end-\/time 
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+Sim\-Process.\-h\item 
+Sim\-Process.\-cpp\end{DoxyCompactItemize}
