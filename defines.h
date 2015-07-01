@@ -19,6 +19,7 @@
 #define DIM 2 /**< Dimension of the Simulation*/
 #define CD_P_SZE 6
 #define OUTP_SZE 3
+#define NR_PROCS 4 /**< Number of Processes*/
 
 //Used Datatype
 typedef double real; /**< used datatype for all Values*/

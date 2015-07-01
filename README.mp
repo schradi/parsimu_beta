@@ -1,1 +1,0 @@
-# parsimu_beta
