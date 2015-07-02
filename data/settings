@@ -1,0 +1,33 @@
+---Included settings---
+r_cut	10
+global_size	100
+t_end	100
+delta_t	0.01
+output_resolution	100
+
+---Calculated Global Settings---
+global_np[0]	2
+global_np[1]	2
+local_size[0]	50
+local_size[1]	50
+cell_size[0]	10
+cell_size[1]	10
+local_nc[0]	5
+local_nc[1]	5
+global_nc[0]	10
+global_nc[1]	10
+max_V	1000
+
+---Calculated Local Settings of rank 0---
+neigh_lower[0]	1
+neigh_lower[1]	2
+neigh_upper[0]	1
+neigh_upper[1]	2
+start[0]	0
+start[1]	0
+ic_start[0]	0
+ic_start[1]	0
+ic_stop[0]	4
+ic_stop[1]	4
+ip[0]		0
+ip[1]		0
