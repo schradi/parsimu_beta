@@ -17,7 +17,15 @@ public:
 	real X[DIM];		/**< Position of the particle*/
 	real V[DIM];		/**< Velocity of the particle*/
 	real F[DIM];		/**< Force-Vector of the particle in the next timestep*/
-	real F_old[DIM];	/**< Force-Vector of the particle in the current timestep*/
+	Particle(){
+		id=-1;
+		m=1;
+		for(int d=0; d<DIM; d++){
+			X[d]=0;
+			V[d]=0;
+			F[d]=0;
+		}
+	}
 };
 
 struct ParticleList{

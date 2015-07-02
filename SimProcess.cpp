@@ -7,33 +7,38 @@
 
 #include "SimProcess.h"
 
-void SimProcess::timeIntegration(real delta_t, real t_end, Cell* cells){
+void SimProcess::timeIntegration(Cell* cells){
 	// todo: Zeit stoppen, die zur Berechnung benötigt wird, zur Lastbalancierung interessant
-
-	t=0;
-	max_V=cell_size[0]/delta_t;
-	while (t<t_end){
+	t=delta_t;
+	long int t_step_nr=1;
+	if(DOKU>=0) if(rank==0) std::cout<<"-----------------------\n- starting Simulation -\n-----------------------\n";
+	while (t<t_end && !aborted){
 		MPI::COMM_WORLD.Barrier();
+		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compF\n";
 //		compF(cells);
-//		compV(delta_t, cells);
-//		std::cout<<"Pr "<<rank<<" - compX\n";
-		compX(delta_t, cells);
-//		std::cout<<"Pr "<<rank<<" - moveParticles\n";
+		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compV\n";
+//		compV(cells);
+		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compX\n";
+		compX(cells);
+		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - moveParticles\n";
 		moveParticles(cells);
-		std::cout<<"Pr "<<rank<<" - communicate\n";
+		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - communicate\n";
 		communicate(cells);
-		if(((int) (t/delta_t))%output_resolution==0){
-			std::cout<<"Pr "<<rank<<" - output\n";
-			output(delta_t, cells);
+		if(t_step_nr%output_resolution==0){
+			if(DOKU>=1) if(rank==0) std::cout<<"Process: "<<(int) ((t/t_end)*100)<<"%\n";
+			if(DOKU>=2) std::cout<<"Pr "<<rank<<" - output\n";
+			output(cells, (int) t_step_nr/output_resolution);
 		}
 		t+=delta_t;
+		t_step_nr++;
 //		status_output("processing");
 	}
 }
 
-void SimProcess::output(real delta_t, Cell* cells){
+void SimProcess::output(Cell* cells, int outp_nr){
 	MPI::COMM_WORLD.Barrier();
 	int ic[DIM];
+
 
 //	// Important: just particles stored in pl are considered
 
@@ -46,7 +51,7 @@ void SimProcess::output(real delta_t, Cell* cells){
 		 * just needs to be different from other direction
 		 */
 //	std::cout<<"Process "<<rank<<" contains "<<*send_pl_l<<" particles\n";
-	std::cout<<"Pr "<<rank<<" - output - begin\n";
+	if(DOKU>=3 )std::cout<<"Pr "<<rank<<" - output - begin\n";
 	if(rank==0){
 
 		// MASTER: Receives information from other processes and puts them in a file
@@ -91,7 +96,6 @@ void SimProcess::output(real delta_t, Cell* cells){
 
 		// Fileoutput
 		std::fstream file;
-		int outp_nr=t/(delta_t*output_resolution);
 
 		// Geting Name of the file
 		char cline_nr[32];
@@ -100,7 +104,11 @@ void SimProcess::output(real delta_t, Cell* cells){
 		strcat(outputfile_new, cline_nr);
 
 		file.open(outputfile_new, std::ios::out|std::ios::trunc);
-		file<<"x coord,y coord\n";
+		file<<"x coord, y coord, x velocity, y velocity\n";
+		file<<"0,0,0,0\n";
+		file<<global_size[0]<<",0,0,0\n";
+		file<<"0,"<<global_size[1]<<",0,0\n";
+		file<<global_size[1]<<","<<global_size[1]<<",0,0\n";
 		for(pos=0; pos<recv_pl_al*OUTP_SZE; pos+=OUTP_SZE){
 //			cells[0].uncodePl(p, recv_pl, pos, OUTP_SZE);
 			file<<recv_pl[pos+1];
@@ -114,7 +122,7 @@ void SimProcess::output(real delta_t, Cell* cells){
 	}else{
 		// Sending number of Particles
 		real send_pl[*send_pl_l*OUTP_SZE];
-		std::cout<<"Pr "<<rank<<" - output - sending: "<<*send_pl_l<<" Particles\n";
+		if(DOKU>=3 )std::cout<<"Pr "<<rank<<" - output - sending: "<<*send_pl_l<<" Particles\n";
 		request=MPI::COMM_WORLD.Isend(send_pl_l, 1, MPI::INT, 0, 1);
 		request.Wait(status);
 
@@ -139,7 +147,7 @@ void SimProcess::output(real delta_t, Cell* cells){
 		request.Wait(status);
 	}
 	delete send_pl_l;
-	std::cout<<"Pr "<<rank<<" - output - end\n";
+	if(DOKU>=3) std::cout<<"Pr "<<rank<<" - output - end\n";
 }
 
 void SimProcess::compF(Cell* cells){
@@ -147,32 +155,20 @@ void SimProcess::compF(Cell* cells){
 	int nc[DIM];
 	Cell* ci;
 	Cell* cj;
-	for (ic[1]=ic_start[1]; ic[1]<ic_stop[1]; ic[1]++){
-		for (ic[0]=ic_start[0]; ic[0]<ic_stop[0]; ic[0]++){
+	for (ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
+		for (ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
 			// for each Cell
 			ci=&cells[local_index(ic)];
-			for(ParticleList* pi=ci->pl; pi->next!=NULL; pi=pi->next){
-				// for each Particle within this Cell
-				for(int d=0; d<DIM; d++){
-					pi->p->F_old[d]=pi->p->F[d];
-					pi->p->F[d]=0;
-				}
-			}
-		}
-	}
-	for (ic[1]=ic_start[1]; ic[1]<ic_stop[1]; ic[1]++){
-		for (ic[0]=ic_start[0]; ic[0]<ic_stop[0]; ic[0]++){
-			// for each Cell
-			ci=&cells[local_index(ic)];
-
-			for(ParticleList* pi=ci->pl; pi->next!=NULL; pi=pi->next){
+			for(ParticleList* pi=ci->pl; pi!=NULL; pi=pi->next){
 				// for each Particle within this Cell
 				for (nc[1]=ic[1]-1;nc[1]<=ic[1]+1;nc[1]++){
 					for (nc[0]=ic[0]-1;nc[0]<=ic[0]+1;nc[0]++){
 						// for each neighboring cell
 						cj=&cells[local_index(nc)];
 						for(ParticleList* pj=cj->pl; pj!=NULL; pj=pj->next ){
-							compF(pi->p, pj->p);
+							if(pj!=pi){
+								compF(pi->p, pj->p);
+							}
 						}
 					}
 				}
@@ -187,29 +183,33 @@ void SimProcess::compF(Particle* p_i, Particle* p_j){
 	F[1]=p_i->X[1]-p_j->X[1];
 	force(F);
 	for(int d=0; d<DIM; d++){
-		p_i->F[d]+=F[d];
-		p_j->F[d]+=F[d];
+		p_i->F[d]=F[d];
+		p_j->F[d]=F[d];
 	}
 }
 
-void SimProcess::compV(real delta_t, Cell* cells){
+void SimProcess::compV(Cell* cells){
 	Cell* c;
 	int ic[DIM];
-	for (ic[1]=ic_start[1]; ic[1]<ic_stop[1]; ic[1]++){
-			for (ic[0]=ic_start[0]; ic[0]<ic_stop[0]; ic[0]++){
+	for (ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
+			for (ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
 			// for each Cell
 			c=&cells[local_index(ic)];
-			for(ParticleList* pi=c->pl; pi->next!=NULL; pi=pi->next){
+			for(ParticleList* pi=c->pl; pi!=NULL; pi=pi->next){
 				// for each Particle within this Cell
 				for(int d=0; d<DIM; d++){
-					pi->p->V[d]=pi->p->V[d]+pi->p->F[d]*delta_t;
+					pi->p->V[d]=pi->p->V[d]+pi->p->F[d]*delta_t/pi->p->m;
+					if(pi->p->V[d]>=max_V){
+						aborted=true;
+						std::cout<<"MAX V was to small";
+					}
 				}
 			}
 		}
 	}
 }
 
-void SimProcess::compX(real delta_t, Cell* cells){
+void SimProcess::compX(Cell* cells){
 	Cell* c;
 	int ic[DIM];
 	for (ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
@@ -218,7 +218,7 @@ void SimProcess::compX(real delta_t, Cell* cells){
 			for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
 				// for each Particle within this Cell
 				for(int d=0; d<DIM; d++)
-				pi->p->X[d]=pi->p->X[d]+pi->p->V[d]*delta_t;
+				pi->p->X[d]+=pi->p->V[d]*delta_t+0.5*pi->p->F[d]/pi->p->m*delta_t*delta_t;
 			}
 		}
 	}
@@ -284,30 +284,140 @@ int SimProcess::getLocalCellId(real* X){
 	return local_index(id);
 }
 
-SimProcess::SimProcess(real p_r_cut, real* p_global_size, int* p_global_np){
-	rank = MPI::COMM_WORLD.Get_rank();
+SimProcess::SimProcess(){
+	// Setting initial Variables
 	num_part=0;
-	r_cut=p_r_cut;
+	aborted=false;
+	np = MPI::COMM_WORLD.Get_size();
+	rank = MPI::COMM_WORLD.Get_rank();
+	t=0;
 
-	// PositionsUNabhängige Parameter berechnen
-	for(int d=0; d<DIM; d++){
-		global_size[d]=p_global_size[d];
-		global_np[d]=p_global_np[d];
-		local_size[d]=global_size[d]/global_np[d];
-
-		cell_size[d]=r_cut;
-		real pos=0;
-		local_nc[d]=0;
-		while(pos+cell_size[d]<=local_size[d]){
-			local_nc[d]++;
-			pos+=cell_size[d];
+	int nr_var=17;
+	if(rank==0){
+		// Input from File
+		char cinput;
+		std::cout<<"Would you like to use settings stored in \"data/settings\"? (y/n) - ";
+		std::cin>>cinput;
+		char f_path[40];
+		if(cinput!='y' && cinput!='Y'){
+			std::cout<<"Insert path: ";
+			std::cin>>f_path;
+		}else{
+			strcpy(f_path, "data/settings");
 		}
-		cell_size[d]=local_size[d]/local_nc[d];
-		global_nc[d]=local_nc[d]*global_np[d];
-		ip[d]=0;
+		std::fstream file;
+		file.open(f_path, std::ios::in);
+		char line[200];
+		double testvar=0;
+		int myint=0;
+		r_cut=0;
+		global_size[0]=0;
+		t_end=0;
+		delta_t=0;
+		output_resolution=0;
+		while(file >> line){
+			if(!strcmp(line, "r_cut")){
+				file >> line;
+				r_cut = atof(line);
+			}
+			if(!strcmp(line, "global_size")){
+				file >> line;
+				global_size[0] = atof(line);
+				global_size[1] = atof(line);
+			}
+			if(!strcmp(line, "t_end")){
+				file >> line;
+				t_end = atof(line);
+			}
+			if(!strcmp(line, "delta_t")){
+				file >> line;
+				delta_t = atof(line);
+			}
+			if(!strcmp(line, "output_resolution")){
+				file >> line;
+				output_resolution = atof(line);
+			}
+		}
+		if(r_cut==0) std::cout<< "r_cut was not declared\n";
+		if(global_size[0]==0) std::cout<< "global_size was not declared\n";
+		if(t_end==0) std::cout<< "t_end was not declared\n";
+		if(delta_t==0) std::cout<< "delta_t was not declared\n";
+		if(output_resolution==0) std::cout<< "output_resolution was not declared\n";
+		file.close();
+
+
+		// Set important global variables
+		std::cout<<"np\t"<<np<<"\n";
+		for(int d=0; d<DIM; d++){
+			global_np[d]= pow(np,(double) 1/DIM);
+			local_size[d]=global_size[d]/global_np[d];
+			cell_size[d]=r_cut;
+			real pos=0;
+			local_nc[d]=0;
+			while(pos+cell_size[d]<=local_size[d]){
+				local_nc[d]++;
+				pos+=cell_size[d];
+			}
+			cell_size[d]=local_size[d]/local_nc[d];
+			global_nc[d]=local_nc[d]*global_np[d];
+		}
+		max_V=cell_size[0]/delta_t;
+
+		// Send Variables
+		// Wrap Variables
+		real vars_send[nr_var];
+		vars_send[0]=r_cut;
+		vars_send[1]=global_size[0];
+		vars_send[2]=global_size[1];
+		vars_send[3]=t_end;
+		vars_send[4]=delta_t;
+		vars_send[5]=output_resolution;
+		vars_send[6]=global_np[0];
+		vars_send[7]=global_np[1];
+		vars_send[8]=local_size[0];
+		vars_send[9]=local_size[1];
+		vars_send[10]=cell_size[0];
+		vars_send[11]=cell_size[1];
+		vars_send[12]=local_nc[0];
+		vars_send[13]=local_nc[1];
+		vars_send[14]=global_nc[0];
+		vars_send[15]=global_nc[1];
+		vars_send[16]=max_V;
+		MPI::Request request;
+		MPI::Status status;
+		for(int p=1; p<np; p++){
+			request=MPI::COMM_WORLD.Isend(vars_send, nr_var, MPI::DOUBLE, p, 1);
+			request.Wait(status);
+		}
+	}else{
+		// Receive the Variables
+		real vars_recv[nr_var];
+		MPI::Request request;
+		MPI::Status status;
+		request=MPI::COMM_WORLD.Irecv(vars_recv, nr_var, MPI::DOUBLE, 0, 1);
+		request.Wait(status);
+//		// Unwrap Variables
+		r_cut			=vars_recv[0];
+		global_size[0]	=vars_recv[1];
+		global_size[1]	=vars_recv[2];
+		t_end			=vars_recv[3];
+		delta_t			=vars_recv[4];
+		output_resolution=vars_recv[5];
+		global_np[0]	=vars_recv[6];
+		global_np[1]	=vars_recv[7];
+		local_size[0]	=vars_recv[8];
+		local_size[1]	=vars_recv[9];
+		cell_size[0]	=vars_recv[10];
+		cell_size[1]	=vars_recv[11];
+		local_nc[0]		=vars_recv[12];
+		local_nc[1]		=vars_recv[13];
+		global_nc[0]	=vars_recv[14];
+		global_nc[1]	=vars_recv[15];
+		max_V			=vars_recv[16];
 	}
-	np=global_np[0]*global_np[1];
-	// PositionsABhängige Parameter berechnen
+	//	Local calculated Variables
+	ip[0]=0;
+	ip[1]=0;
 	while(ip[0]+global_np[0]*ip[1]!=rank){
 		if(ip[0]+1<global_np[0]){
 			ip[0]++;
@@ -316,14 +426,12 @@ SimProcess::SimProcess(real p_r_cut, real* p_global_size, int* p_global_np){
 			ip[1]++;
 		}
 	}
-
 	for(int d=0; d<DIM; d++){
 		start[d]=ip[d]*local_size[d];
 		ic_start[d]=ip[d]*local_nc[d];
 		ic_stop[d]=ic_start[d]+local_nc[d]-1;
 	}
 
-	// Nachbarn berechnen
 	if(ip[0]-1>=0){
 		neigh_lower[0]=ip[0]-1+global_np[0]*ip[1];
 	}else{
@@ -334,7 +442,6 @@ SimProcess::SimProcess(real p_r_cut, real* p_global_size, int* p_global_np){
 	}else{
 		neigh_upper[0]=(global_np[0]*ip[1]);
 	}
-
 	if(ip[1]-1>=0){
 		neigh_lower[1]=ip[0]+global_np[0]*(ip[1]-1);
 	}else{
@@ -346,42 +453,60 @@ SimProcess::SimProcess(real p_r_cut, real* p_global_size, int* p_global_np){
 		neigh_upper[1]=ip[0];
 	}
 
-	// Ausgabe zur Überprüfung möglich:
+
+
 	if(rank==0){
-		std::cout<<"-------RANK: "<<rank<<"-------\n";
+		// Output in file
+		std::fstream file;
+		file.open("data/settings", std::ios::out | std::ios::trunc);
+		file<<"---Included settings---\n";
+		file<<"r_cut\t"<<r_cut<<"\n";
+		file<<"global_size\t"<<global_size[0]<<"\n";
+		file<<"t_end\t"<<t_end<<"\n";
+		file<<"delta_t\t"<<delta_t<<"\n";
+		file<<"output_resolution\t"<<output_resolution<<"\n";
+
+		file<<"\n---Calculated Global Settings---\n";
 		for(int d=0; d<DIM; d++){
-			std::cout<<"neigh_lower["<<d<<"]\t"<<neigh_lower[d]<<"\n";
+			file<<"global_np["<<d<<"]\t"<<global_np[d]<<"\n";
 		}
 		for(int d=0; d<DIM; d++){
-			std::cout<<"neigh_upper["<<d<<"]\t"<<neigh_upper[d]<<"\n";
+			file<<"local_size["<<d<<"]\t"<<local_size[d]<<"\n";
 		}
 		for(int d=0; d<DIM; d++){
-			std::cout<<"start["<<d<<"]\t"<<start[d]<<"\n";
+			file<<"cell_size["<<d<<"]\t"<<cell_size[d]<<"\n";
 		}
 		for(int d=0; d<DIM; d++){
-			std::cout<<"ic_start["<<d<<"]\t"<<ic_start[d]<<"\n";
+			file<<"local_nc["<<d<<"]\t"<<local_nc[d]<<"\n";
 		}
 		for(int d=0; d<DIM; d++){
-			std::cout<<"ic_stop["<<d<<"]\t"<<ic_stop[d]<<"\n";
+			file<<"global_nc["<<d<<"]\t"<<global_nc[d]<<"\n";
+		}
+		file<<"max_V\t"<<max_V<<"\n";
+
+		file<<"\n---Calculated Local Settings of rank 0---\n";
+		for(int d=0; d<DIM; d++){
+			file<<"neigh_lower["<<d<<"]\t"<<neigh_lower[d]<<"\n";
 		}
 		for(int d=0; d<DIM; d++){
-			std::cout<<"cell_size["<<d<<"]\t"<<cell_size[d]<<"\n";
+			file<<"neigh_upper["<<d<<"]\t"<<neigh_upper[d]<<"\n";
 		}
 		for(int d=0; d<DIM; d++){
-			std::cout<<"global_nc["<<d<<"]\t"<<global_nc[d]<<"\n";
+			file<<"start["<<d<<"]\t"<<start[d]<<"\n";
 		}
 		for(int d=0; d<DIM; d++){
-			std::cout<<"local_nc["<<d<<"]\t"<<local_nc[d]<<"\n";
+			file<<"ic_start["<<d<<"]\t"<<ic_start[d]<<"\n";
 		}
 		for(int d=0; d<DIM; d++){
-			std::cout<<"local_size["<<d<<"]\t"<<local_size[d]<<"\n";
+			file<<"ic_stop["<<d<<"]\t"<<ic_stop[d]<<"\n";
 		}
 		for(int d=0; d<DIM; d++){
-			std::cout<<"ip["<<d<<"]\t\t"<<ip[d]<<"\n";
+			file<<"ip["<<d<<"]\t\t"<<ip[d]<<"\n";
 		}
-		std::cout<<"id of last cell:\t"<<index(ic_stop, global_nc)<<"\n";
+		file.close();
 	}
-//	status_output((char*)"ready to start");
+
+	std::cout<<"P "<<rank<<" - ready to start\n";
 }
 
 void SimProcess::create_cells(Cell* cells){
@@ -407,17 +532,20 @@ void SimProcess::force(real* X){
 		r+=X[d]*X[d];
 	}
 	r=sqrt(r);
-
-	// Normalization of X
-	for (int d=0; d<DIM; d++){
-		X[d]=X[d]/r;
-	}
-
-	real s = sqr(sigma) /r;
-	s=sqr(s)*s;
-	real f = 24* epsilon * s/ r * (1-2*s);
-	for (int d=0; d<DIM; d++){
-		X[d] = f*X[d];
+	if(r<=r_cut){
+		// Normalization of X
+		for (int d=0; d<DIM; d++){
+			X[d]=X[d]/r;
+		}
+		real s = sqr(sigma) /r;
+		s=sqr(s)*s;
+		real f = 24* epsilon * s/ r * (1-2*s);
+		for (int d=0; d<DIM; d++){
+			X[d] = f*X[d];
+		}
+	}else{
+		X[0]=0;
+		X[1]=0;
 	}
 }
 
@@ -691,9 +819,9 @@ void SimProcess::code_pl(real* send_pl, int* icr_start, int* icr_stop, int size,
 void SimProcess::create_particles(ParticleList* new_pl, real* r_start, real* r_stop, real resolution, real* p_V){
 	real pos[DIM];
 //	new_pl->next=NULL;
-	if(new_pl->next==NULL) std::cout<<"jep\n";
 	ParticleList* tmp;
 	int id_c=0;
+	std::cout<<"create_particles(("<<r_start[0]<<","<<r_stop[1]<<"),("<<r_stop[0]<<","<<r_stop[1]<<"),"<<resolution<<",("<<p_V[0]<<","<<p_V[1]<<"))\n";
 	for(pos[1]=r_start[1]; pos[1]<r_stop[1] && pos[1]<global_size[1]; pos[1]+=resolution){
 		for(pos[0]=r_start[0]; pos[0]<r_stop[0] && pos[0]<global_size[0]; pos[0]+=resolution){
 			// Da new_pl auf eine feste Adresse zeigt, kann diese nicht verändert werden. Lösung: Arbeiten mit new_pl->next
@@ -717,19 +845,129 @@ void SimProcess::create_particles(ParticleList* new_pl, real* r_start, real* r_s
 	std::cout<<"Included Particles\t"<<id_c<<"\n";
 }
 
+void SimProcess::insert_particles(ParticleList* new_pl){
+	real pos[DIM];
+	ParticleList* tmp;
+	int id_c=0;
+	char cfile[30];
+	char in;
+
+
+	std::cout<<"Would you like to use an existing file? - (y/n) - ";
+	std::cin>>in;
+	if(in=='y' || in=='Y'){
+		std::cout<<"Would you like to use a Particle file stored in \"data/\"? - (y/n) - ";
+		std::cin>>in;
+		if(in=='y' || in=='Y'){
+			char nr[4];
+			std::cout<<"Which one would you like to use? - (number) - ";
+			std::cin>>nr;
+			strcpy(cfile, "data/data.csv.");
+			strcat(cfile, nr);
+		}else{
+			std::cout<<"Insert path to particle file: ";
+			std::cin>>cfile;
+		}
+		std::fstream file;
+		file.open(cfile, std::ios::in);
+		double X[2]={0,0};
+		double V[2]={0,0};
+		std::string line;
+		// Jump over first 5 Lines (Title + Corner)
+		getline(file, line);
+		getline(file, line);
+		getline(file, line);
+		getline(file, line);
+		getline(file, line);
+		while(std::getline(file, line)){
+			line+=',';
+			size_t pos=0;
+			if ((pos = line.find(',')) != std::string::npos)
+			{
+				std::string val = line.substr(0, pos);
+				line = line.substr(pos + 1);
+				X[0]=atof(val.c_str());
+			}
+			if ((pos = line.find(',')) != std::string::npos)
+			{
+				std::string val = line.substr(0, pos);
+				line = line.substr(pos + 1);
+				X[1] = atof(val.c_str());
+			}
+			if ((pos = line.find(',')) != std::string::npos)
+			{
+				std::string val = line.substr(0, pos);
+				line = line.substr(pos + 1);
+				V[0] = atof(val.c_str());
+			}
+			if ((pos = line.find(',')) != std::string::npos)
+			{
+				std::string val = line.substr(0, pos);
+				line = line.substr(pos + 1);
+				V[1] = atof(val.c_str());
+			}
+			id_c++;
+			if(new_pl->p!=NULL){
+				tmp=new_pl->next;
+				new_pl->next=new ParticleList;
+				new_pl->next->next=tmp;
+				new_pl->next->p=new_pl->p;
+				new_pl->p=NULL;
+			}
+			new_pl->p= new Particle;
+			new_pl->p->id=id_c;
+			new_pl->p->m=1;
+			for(int d=0; d<DIM; d++){
+				new_pl->p->X[d]=X[d];
+				new_pl->p->V[d]=V[d];
+			}
+		}
+		std::cout<<"Included Particles from File\t"<<id_c<<"\n";
+	}else{
+		in='y';
+		real r_start[DIM];
+		real r_stop[DIM];
+		real res;
+		real V[DIM];
+		while(in=='y' || in=='Y'){
+			std::cout<<"Would you like to create a new Particle Cloud? - ";
+			std::cin>>in;
+			if(in=='y' || in=='Y'){
+				for(int d=0; d<DIM; d++){
+					r_start[d]=-1;
+					while(r_start[d]<0 || r_start[d]>global_size[d]){
+						std::cout<<"Insert start["<<d<<"] - ";
+						std::cin>>r_start[d];
+					}
+				}
+				for(int d=0; d<DIM; d++){
+					r_stop[d]=-1;
+					while(r_stop[d]<=r_start[d] || r_stop[d]>global_size[d]){
+						std::cout<<"Insert stop["<<d<<"] - ";
+						std::cin>>r_stop[d];
+					}
+				}
+				for(int d=0; d<DIM; d++){
+					std::cout<<"Insert Velocity["<<d<<"] - ";
+					std::cin>>V[d];
+				}
+				std::cout<<"Insert Resolution - ";
+				std::cin>>res;
+				create_particles(new_pl, r_start, r_stop, res, V);
+			}
+		}
+
+	}
+}
+
 void SimProcess::initData(Cell* cells){
 	MPI::Request request;
 	MPI::Status status;
 	ParticleList* own=NULL;
 
 	if(rank==0){
-		// MASTER creates ParticleList containing all needed information
-		real r_start[DIM]={1.5, 51.5};
-		real r_stop[DIM]={24.9, 94.9};
-		real resolution=1;
-		real V[DIM]={1, 0.5};
 		ParticleList* to_insert=new ParticleList;
-		create_particles(to_insert, r_start, r_stop, resolution, V);
+		insert_particles(to_insert);
 
 		// Sort Particles in different ParticleLists
 		ParticleList* tmp;

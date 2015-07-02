@@ -35,30 +35,22 @@ int main(int argc, char* argv[]) {
 			return 0;
 		}
 	}
-	real global_size[DIM];
-	for(int d=0; d<DIM; d++){
-		global_size[d]=100;
-	}
-	real r_cut=25;
+
 	SimProcess* sim_p;
 
-	sim_p= new SimProcess(r_cut, global_size, global_np);
+	sim_p= new SimProcess();
 	int numc=(sim_p->local_nc[0]+2)*(sim_p->local_nc[1]+2);
 	Cell cells[numc];
 	sim_p->create_cells(cells);
 	MPI::COMM_WORLD.Barrier();
 	sim_p->initData(cells);
-	real delta_t=1;
-	real t_end=1000;
-	sim_p->t=0;
-	sim_p->output_resolution=5;
-	sim_p->output(delta_t, cells);
+	sim_p->output(cells, 0);
 	MPI::COMM_WORLD.Barrier();
 	sim_p->communicate(cells);
 
 	MPI::COMM_WORLD.Barrier();
 
-	sim_p->timeIntegration(delta_t, t_end, cells);
+	sim_p->timeIntegration(cells);
 
 	MPI::Finalize();
 	return 0;

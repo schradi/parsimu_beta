@@ -26,7 +26,10 @@
  */
 class SimProcess{
 public:
+	bool aborted;
 	real cell_size[DIM];			/**< +Width of each cell*/
+	real delta_t;
+	real t_end;
 	int  global_nc[DIM];			/**< +Global number of cells*/
 	real global_size[DIM];			/**< +Size of the simulated area*/
 	int  ic_start[DIM];				/**< +lowest cell-index in this process*/
@@ -41,11 +44,12 @@ public:
 	int	 rank;						/**< +Rank of this Process*/
 	real r_cut;						/**< +cutting-radius for short-range forces*/
 	real start[DIM];				/**< +Starting-Point of this Process (left down point)*/
-	real max_V;						/**< maximum of speed the particles are allowed to achieve*/
+	real max_V;				/**< +maximum of speed the particles are allowed to achieve*/
 	int output_resolution;
 	real t;
 	int np;
 
+	void insert_particles(ParticleList* new_pl);
 	/**
 	 * Communication between the processes
 	 */
@@ -74,13 +78,13 @@ public:
 	 * Calculates the new Velocity of the particles caused by the new force
 	 * @param delta_t is the lenght of the timestep
 	 */
-	void compV(real delta_t, Cell* cells);
+	void compV(Cell* cells);
 
 	/**
 	 * Calculates the new Position of the particle caused by the new velocity
 	 * @param delta_t is the lenght of the timestep
 	 */
-	void compX(real delta_t, Cell* cells);
+	void compX(Cell* cells);
 
 	/**
 	 * Calculates the force caused by the Lennard-Jones-Potential in a distance of p_X
@@ -137,14 +141,14 @@ public:
 	/**
 	 * Saves all needed particleinformation calculated within this process
 	 */
-	void output(real delta_t, Cell* cells);
+	void output(Cell* cells, int outp_nr);
 
 	void create_cells(Cell* p_cells);
 
 	/**
 	 * Constructor
 	 */
-	SimProcess (real p_r_cut, real* p_global_size, int* p_global_np);
+	SimProcess();
 
 	/**
 	 * Destructor
@@ -160,7 +164,7 @@ public:
 	/**
 	 * Calculates the next timestep
 	*/
-	void timeIntegration(real delta_t, real t_end, Cell* cells);
+	void timeIntegration(Cell* cells);
 
 	/**
 	 * All Particles stored in adding are put in pl, adding = NULL
