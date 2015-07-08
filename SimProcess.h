@@ -18,6 +18,7 @@
 #include <iostream>
 #include <fstream>
 #include <string.h>
+#include "timers.h"
 
 
 /**
@@ -45,6 +46,10 @@ public:
 	real r_cut;						/**< +cutting-radius for short-range forces*/
 	real start[DIM];				/**< +Starting-Point of this Process (left down point)*/
 	real max_V;				/**< +maximum of speed the particles are allowed to achieve*/
+	real sigma;					/**< Parameter sigma for the Lennard-Jones-Potential*/
+	real epsilon; 				/**< Parameter epsilon for the Lennard-Jones-Potential*/
+	TimerList* timerList;
+
 	int output_resolution;
 	real t;
 	int np;
