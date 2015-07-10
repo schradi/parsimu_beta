@@ -13,7 +13,7 @@
 
 class Timer{
 public:
-	clock_t time;
+	double time;
 	std::string tag;
 	long int count;
 

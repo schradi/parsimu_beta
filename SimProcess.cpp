@@ -38,7 +38,7 @@ void SimProcess::timeIntegration(Cell* cells){
 		if(rank==0) timerList->calc_avg_time("moveParticles", t_start);
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - communicate\n";
 		if(rank==0) t_start=clock();
-//		communicate(cells);
+		communicate(cells);
 		MPI::COMM_WORLD.Barrier();
 		if(rank==0) timerList->calc_avg_time("communicate", t_start);
 		if(t_step_nr%output_resolution==0){
@@ -224,17 +224,17 @@ void SimProcess::compV(Cell* cells){
 	Cell* c;
 	int ic[DIM];
 	for (ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
-			for (ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
+		for (ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
 			// for each Cell
 			c=&cells[local_index(ic)];
 			for(ParticleList* pi=c->pl; pi!=NULL; pi=pi->next){
 				// for each Particle within this Cell
 				for(int d=0; d<DIM; d++){
 					pi->p->V[d]=pi->p->V[d]+pi->p->F[d]*delta_t/pi->p->m;
-					if(pi->p->V[d]>=max_V){
-						aborted=true;
-						std::cout<<"MAX V was to small";
-					}
+//					if(pi->p->V[d]>=max_V){
+//						aborted=true;
+//						std::cout<<"MAX V was to small";
+//					}
 				}
 			}
 		}
@@ -636,10 +636,10 @@ void SimProcess::communicate(Cell* cells){
 	// For all cells: include adding in PL
 	adding_to_pl(cells);
 
-
-
+//
+//
 	communicate(0, cells);
-	communicate(1, cells);
+//	communicate(1, cells);
 }
 
 void SimProcess::communicate(int com_d, Cell* cells){
@@ -672,17 +672,17 @@ void SimProcess::communicate(int com_d, Cell* cells){
 //		std::cout<<"P"<<rank<<"-Sendrecv-right-length("<<neigh_upper[com_d]<<", 1, "<<neigh_upper[com_d]<<", 2)\n";
 //		std::cout<<"P"<<rank<<" comm("<<com_d<<")-before sending length\n";
 		MPI::COMM_WORLD.Sendrecv(&send_plr_l, 1, MPI::INT, neigh_upper[com_d], 1, &recv_plr_l, 1, MPI::INT, neigh_upper[com_d], 2);
-//		std::cout<<"P"<<rank<<" received length "<<recv_plr_l<<"\n";
+////		std::cout<<"P"<<rank<<" received length "<<recv_plr_l<<"\n";
 		delete_pl(icr_start, icr_stop, cells);
 		real recv_plr[recv_plr_l*CD_P_SZE];
 //		std::cout<<"P"<<rank<<"-Sendrecv-right-list("<<send_plr_l*CD_P_SZE<<" ,"<<neigh_upper[com_d]<<", 3, "<<recv_plr_l*CD_P_SZE<<" ,"<<neigh_upper[com_d]<<", 4)\n";
 //		std::cout<<"P"<<rank<<" comm("<<com_d<<")-before sending list\n";
-		MPI::COMM_WORLD.Sendrecv(&send_plr, send_plr_l*CD_P_SZE, MPI::DOUBLE, neigh_upper[com_d], 3, &send_plr, recv_plr_l*CD_P_SZE, MPI::DOUBLE, neigh_upper[com_d], 4);
+		MPI::COMM_WORLD.Sendrecv(&send_plr, send_plr_l*CD_P_SZE, MPI::DOUBLE, neigh_upper[com_d], 3, &recv_plr, recv_plr_l*CD_P_SZE, MPI::DOUBLE, neigh_upper[com_d], 4);
 //		std::cout<<"P"<<rank<<" received list\n";
 		uncodePl(recv_plr, icr_start, icr_stop, recv_plr_l, CD_P_SZE, cells);
-
+//
 //		std::cout<<"P"<<rank<<" comm("<<com_d<<")-half time\n";
-		//left
+//		//left
 		icr_start[com_d]=ic_start[com_d]-1;
 		icr_start[oth_d]=ic_start[oth_d]-1;
 		icr_stop[com_d]=ic_start[com_d];
@@ -696,7 +696,7 @@ void SimProcess::communicate(int com_d, Cell* cells){
 		MPI::COMM_WORLD.Sendrecv(&send_pll_l, 1, MPI::INT, neigh_lower[com_d], 5, &recv_pll_l, 1, MPI::INT, neigh_lower[com_d], 6);
 		delete_pl(icr_start, icr_stop, cells);
 		real recv_pll[recv_pll_l*CD_P_SZE];
-		MPI::COMM_WORLD.Sendrecv(&send_pll, send_pll_l*CD_P_SZE, MPI::DOUBLE, neigh_lower[com_d], 7, &send_pll, recv_pll_l*CD_P_SZE, MPI::DOUBLE, neigh_lower[com_d], 8);
+		MPI::COMM_WORLD.Sendrecv(&send_pll, send_pll_l*CD_P_SZE, MPI::DOUBLE, neigh_lower[com_d], 7, &recv_pll, recv_pll_l*CD_P_SZE, MPI::DOUBLE, neigh_lower[com_d], 8);
 		uncodePl(recv_pll, icr_start, icr_stop, recv_pll_l, CD_P_SZE, cells);
 	}else{
 		// left
@@ -715,7 +715,7 @@ void SimProcess::communicate(int com_d, Cell* cells){
 		real recv_pll[recv_pll_l*CD_P_SZE];
 //		std::cout<<"P"<<rank<<"-Sendrecv("<<send_pll_l*CD_P_SZE<<" ,"<<neigh_lower[com_d]<<", 4, "<<recv_pll_l*CD_P_SZE<<" ,"<<neigh_lower[com_d]<<", 3)\n";
 //		std::cout<<"P"<<rank<<" comm("<<com_d<<")-before sending list\n";
-		MPI::COMM_WORLD.Sendrecv(&send_pll, send_pll_l*CD_P_SZE, MPI::DOUBLE, neigh_lower[com_d], 4, &send_pll, recv_pll_l*CD_P_SZE, MPI::DOUBLE, neigh_lower[com_d], 3);
+		MPI::COMM_WORLD.Sendrecv(&send_pll, send_pll_l*CD_P_SZE, MPI::DOUBLE, neigh_lower[com_d], 4, &recv_pll, recv_pll_l*CD_P_SZE, MPI::DOUBLE, neigh_lower[com_d], 3);
 		uncodePl(recv_pll, icr_start, icr_stop, recv_pll_l, CD_P_SZE, cells);
 
 //		std::cout<<"P"<<rank<<" comm("<<com_d<<")-half time\n";
@@ -731,7 +731,7 @@ void SimProcess::communicate(int com_d, Cell* cells){
 		code_pl(send_plr, icr_start, icr_stop, CD_P_SZE, cells);
 		MPI::COMM_WORLD.Sendrecv(&send_plr_l, 1, MPI::INT, neigh_upper[com_d], 6, &recv_plr_l, 1, MPI::INT, neigh_upper[com_d], 5);
 		real recv_plr[recv_plr_l*CD_P_SZE];
-		MPI::COMM_WORLD.Sendrecv(&send_plr, send_plr_l*CD_P_SZE, MPI::DOUBLE, neigh_upper[com_d], 8, &send_plr, recv_plr_l*CD_P_SZE, MPI::DOUBLE, neigh_upper[com_d], 7);
+		MPI::COMM_WORLD.Sendrecv(&send_plr, send_plr_l*CD_P_SZE, MPI::DOUBLE, neigh_upper[com_d], 8, &recv_plr, recv_plr_l*CD_P_SZE, MPI::DOUBLE, neigh_upper[com_d], 7);
 		uncodePl(recv_plr, icr_start, icr_stop, recv_plr_l, CD_P_SZE, cells);
 	}
 
@@ -1033,7 +1033,7 @@ void SimProcess::insert_particles(ParticleList* new_pl){
 		r_stop[1]=global_size[1]-1;
 		V[0]=0.1;
 		V[1]=0.1;
-		res = (global_size[0]-2)/num_part;
+		res = (global_size[0]-1)/num_part;
 		num_part=0;
 		create_particles(new_pl, r_start, r_stop, res, V);
 	}

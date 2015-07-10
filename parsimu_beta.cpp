@@ -18,12 +18,9 @@
 #include "timers.h"
 
 int main(int argc, char* argv[]) {
-	int c_start, c_stop;
+	int c_nump;
 	if(argc>=2){
-		c_start=atoi(argv[1]);
-	}
-	if(argc>=3){
-		c_stop=atoi(argv[2]);
+		c_nump=(int)sqrt(atoi(argv[1]));
 	}
 	MPI::Init (argc, argv);
 	// calculate global_np
@@ -44,43 +41,41 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
+	SimProcess* sim_p;
+	sim_p= new SimProcess();
+	int numc=(sim_p->local_nc[0]+2)*(sim_p->local_nc[1]+2);
+	Cell cells[numc];
+	sim_p->create_cells(cells);
+	MPI::COMM_WORLD.Barrier();
+	sim_p->num_part=c_nump;
+	sim_p->initData(cells);
 
-	for(int npart=(int)sqrt(c_start); npart<=sqrt(c_stop); npart++){
-		SimProcess* sim_p;
-		sim_p= new SimProcess();
-		int numc=(sim_p->local_nc[0]+2)*(sim_p->local_nc[1]+2);
-		Cell cells[numc];
-		sim_p->create_cells(cells);
-		MPI::COMM_WORLD.Barrier();
-		sim_p->num_part=npart;
-		sim_p->initData(cells);
+	sim_p->output(cells, 0);
+	MPI::COMM_WORLD.Barrier();
+	sim_p->communicate(cells);
 
-		sim_p->output(cells, 0);
-		MPI::COMM_WORLD.Barrier();
-		sim_p->communicate(cells);
-
-		sim_p->timeIntegration(cells);
-		MPI::COMM_WORLD.Barrier();
-		if(sim_p->rank==0){
-			std::fstream file;
-			if(npart==sqrt(c_start)){
-				file.open("times.csv", std::ios::out | std::ios::trunc);
-				file<<"Number Particles";
-				for(TimerList* ti=sim_p->timerList; ti!=NULL; ti=ti->next){
-					file<<","<<ti->t->tag;
-				}
-				file<<"\n";
-			}else{
-				file.open("times.csv", std::ios::out | std::ios::app);
-			}
-			file<<npart*npart;
-			for(TimerList* ti=sim_p->timerList; ti!=NULL; ti=ti->next){
-				file<<","<<ti->t->time;
-			}
-			file<<"\n";
-			file.close();
+	sim_p->timeIntegration(cells);
+	MPI::COMM_WORLD.Barrier();
+	if(sim_p->rank==0){
+		std::fstream file;
+//			if(npart==sqrt(c_start)){
+//				file.open("times.csv", std::ios::out | std::ios::trunc);
+//				file<<"Number Particles";
+//				for(TimerList* ti=sim_p->timerList; ti!=NULL; ti=ti->next){
+//					file<<","<<ti->t->tag;
+//				}
+//				file<<"\n";
+//			}else{
+			file.open("times.csv", std::ios::out | std::ios::app);
+//			}
+			file<<c_nump*c_nump;
+		for(TimerList* ti=sim_p->timerList; ti!=NULL; ti=ti->next){
+			file<<" "<<ti->t->time;
 		}
+		file<<"\n";
+		file.close();
 	}
+
 	MPI::Finalize();
 //	std::cout<<"C_Start\t"<<c_start<<"\n";
 //	std::cout<<"C_Res\t"<<c_res<<"\n";
