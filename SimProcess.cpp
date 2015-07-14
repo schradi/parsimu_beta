@@ -44,7 +44,7 @@ void SimProcess::timeIntegration(Cell* cells){
 			if(rank==0) timerList->calc_avg_time("communicate", t_start);
 		}
 		if(t_step_nr%output_resolution==0){
-			if(DOKU>=1) if(rank==0) std::cout<<"\r"<<"Process: "<<(int) ((t/t_end)*100)<<"%";
+			if(DOKU>=1) if(rank==0) std::cout<<"Process: "<<(int) ((t/t_end)*100)<<"%";
 			if(DOKU>=2) std::cout<<"Pr "<<rank<<" - output\n";
 			if(rank==0) t_start=clock();
 			output(cells, (int) t_step_nr/output_resolution);
