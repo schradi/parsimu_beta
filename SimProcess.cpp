@@ -604,9 +604,7 @@ void SimProcess::force(real* X){
 		for (int d=0; d<DIM; d++){
 			X[d]=X[d]/r;
 		}
-		real s = sqr(sigma) /r;
-		s=sqr(s)*s;
-		real f = 24* epsilon * s/ r * (1-2*s);
+		real f = lj_force(r)-lj_force(r_cut);
 		for (int d=0; d<DIM; d++){
 			X[d] = f*X[d];
 		}
@@ -614,6 +612,14 @@ void SimProcess::force(real* X){
 		X[0]=0;
 		X[1]=0;
 	}
+}
+
+real SimProcess::lj_force(real r){
+	real f1;
+	real f2;
+	f1=pow(sigma/r, 12);
+	f2=pow(sigma/r, 6);
+	return 24*epsilon/r*(2*f1-f2);
 }
 
 void SimProcess::communicate(Cell* cells){

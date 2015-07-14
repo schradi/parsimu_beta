@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
 	sim_p->timeIntegration(cells);
 	MPI::COMM_WORLD.Barrier();
 	if(sim_p->rank==0){
-		std::cout<<"times.csv:\n";
+		std::cout<<"times.csv\n";
 		std::fstream file;
 //			if(npart==sqrt(c_start)){
 //				file.open("times.csv", std::ios::out | std::ios::trunc);
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
 //			}
 			file<<c_nump*c_nump;
 		for(TimerList* ti=sim_p->timerList; ti!=NULL; ti=ti->next){
-			file<<" "<<ti->t->time;
+			file<<" "<<ti->t->timer;
 			std::cout<<ti->t->tag<<" ";
 		}
 		file<<"\n";

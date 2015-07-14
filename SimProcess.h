@@ -98,6 +98,8 @@ public:
 	 */
 	void force(real* p_X);
 
+	real lj_force(real r);
+
 	/**
 	 * Returns the id of the cell responsible for the Position p_X
 	 * @param p_X Position of which the responsible process in needed
