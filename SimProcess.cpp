@@ -640,10 +640,12 @@ void SimProcess::communicate(Cell* cells){
 //
 //
 	communicate(0, cells);
-//	communicate(1, cells);
+	communicate(1, cells);
 }
 
 void SimProcess::communicate(int com_d, Cell* cells){
+	MPI::Request request;
+
 	int oth_d;
 	if(com_d==0){
 		oth_d=1;
@@ -651,94 +653,132 @@ void SimProcess::communicate(int com_d, Cell* cells){
 		oth_d=0;
 	}
 	int ic[DIM];
-	int icr_start[DIM];
-	int icr_stop[DIM];
+	int icr_lower_start[DIM], icr_upper_start[DIM];
+	int icr_lower_stop[DIM], icr_upper_stop[DIM];
 
+	icr_lower_start[com_d]=ic_start[com_d]-1;
+	icr_lower_start[oth_d]=ic_start[oth_d]-1;
+	icr_lower_stop[com_d]=ic_start[com_d];
+	icr_lower_stop[oth_d]=ic_stop[oth_d]+1;
 
-	/**
-	 * Schachbrettkommunikation nötig, da Prozesse nach senden aufeinander warten müssen, bis alles gesandt wurde.
-	 */
-//	std::cout<<"P"<<rank<<" comm("<<com_d<<")-start\n";
-	if(ip[com_d]%2==0){
-		//right
+	icr_upper_start[com_d]=ic_stop[com_d];
+	icr_upper_start[oth_d]=ic_start[oth_d]-1;
+	icr_upper_stop[com_d]=ic_stop[com_d]+1;
+	icr_upper_stop[oth_d]=ic_stop[oth_d]+1;
 
-		icr_start[com_d]=ic_stop[com_d];
-		icr_start[oth_d]=ic_start[oth_d]-1;
-		icr_stop[com_d]=ic_stop[com_d]+1;
-		icr_stop[oth_d]=ic_stop[oth_d]+1;
-		int send_plr_l = get_num_p(icr_start, icr_stop, cells);
-		int recv_plr_l;
-		real send_plr[send_plr_l*CD_P_SZE];
-		code_pl(send_plr, icr_start, icr_stop, CD_P_SZE, cells);
-//		std::cout<<"P"<<rank<<"-Sendrecv-right-length("<<neigh_upper[com_d]<<", 1, "<<neigh_upper[com_d]<<", 2)\n";
-//		std::cout<<"P"<<rank<<" comm("<<com_d<<")-before sending length\n";
-		MPI::COMM_WORLD.Sendrecv(&send_plr_l, 1, MPI::INT, neigh_upper[com_d], 1, &recv_plr_l, 1, MPI::INT, neigh_upper[com_d], 2);
-////		std::cout<<"P"<<rank<<" received length "<<recv_plr_l<<"\n";
-		delete_pl(icr_start, icr_stop, cells);
-		real recv_plr[recv_plr_l*CD_P_SZE];
-//		std::cout<<"P"<<rank<<"-Sendrecv-right-list("<<send_plr_l*CD_P_SZE<<" ,"<<neigh_upper[com_d]<<", 3, "<<recv_plr_l*CD_P_SZE<<" ,"<<neigh_upper[com_d]<<", 4)\n";
-//		std::cout<<"P"<<rank<<" comm("<<com_d<<")-before sending list\n";
-		MPI::COMM_WORLD.Sendrecv(&send_plr, send_plr_l*CD_P_SZE, MPI::DOUBLE, neigh_upper[com_d], 3, &recv_plr, recv_plr_l*CD_P_SZE, MPI::DOUBLE, neigh_upper[com_d], 4);
-//		std::cout<<"P"<<rank<<" received list\n";
-		uncodePl(recv_plr, icr_start, icr_stop, recv_plr_l, CD_P_SZE, cells);
+	// sending lower, receiving upper
+	int send_pl_lower_length = get_num_p(icr_lower_start, icr_lower_stop, cells);
+	int recv_pl_upper_length;
+	real send_pl_lower[send_pl_lower_length*CD_P_SZE];
+	code_pl(send_pl_lower, icr_lower_start, icr_lower_stop, CD_P_SZE, cells);
+	request = MPI::COMM_WORLD.Isend(&send_pl_lower_length, 1, MPI::INT, neigh_lower[com_d], 1);
+	delete_pl(icr_lower_start, icr_lower_stop, cells);
+	MPI::COMM_WORLD.Recv(&recv_pl_upper_length, 1, MPI::INT, neigh_upper[com_d], 1);
+	request.Wait();
+	real recv_pl_upper[recv_pl_upper_length*CD_P_SZE];
+	request = MPI::COMM_WORLD.Isend(&send_pl_lower, send_pl_lower_length*CD_P_SZE, MPI::DOUBLE, neigh_lower[com_d], 2);
+	MPI::COMM_WORLD.Recv(&recv_pl_upper, recv_pl_upper_length*CD_P_SZE, MPI::DOUBLE, neigh_upper[com_d], 2);
+	request.Wait();
+	uncodePl(recv_pl_upper, icr_upper_start, icr_upper_stop, recv_pl_upper_length, CD_P_SZE, cells);
+
+	// sending upper, receiving lower
+	int send_pl_upper_length = get_num_p(icr_upper_start, icr_upper_stop, cells);
+	int recv_pl_lower_length;
+	real send_pl_upper[send_pl_upper_length*CD_P_SZE];
+	code_pl(send_pl_upper, icr_upper_start, icr_upper_stop, CD_P_SZE, cells);
+	request = MPI::COMM_WORLD.Isend(&send_pl_upper_length, 1, MPI::INT, neigh_upper[com_d], 3);
+	MPI::COMM_WORLD.Recv(&recv_pl_lower_length, 1, MPI::INT, neigh_lower[com_d], 3);
+	request.Wait();
+	real recv_pl_lower[recv_pl_lower_length*CD_P_SZE];
+	request = MPI::COMM_WORLD.Isend(&send_pl_upper, send_pl_upper_length*CD_P_SZE, MPI::DOUBLE, neigh_upper[com_d], 4);
+	MPI::COMM_WORLD.Recv(&recv_pl_lower, recv_pl_lower_length*CD_P_SZE, MPI::DOUBLE, neigh_lower[com_d], 4);
+	request.Wait();
+	uncodePl(recv_pl_lower, icr_lower_start, icr_lower_stop, recv_pl_lower_length, CD_P_SZE, cells);
+
+//	/**
+//	 * Schachbrettkommunikation nötig, da Prozesse nach senden aufeinander warten müssen, bis alles gesandt wurde.
+//	 */
+////	std::cout<<"P"<<rank<<" comm("<<com_d<<")-start\n";
+//	if(ip[com_d]%2==0){
+//		//right
 //
-//		std::cout<<"P"<<rank<<" comm("<<com_d<<")-half time\n";
-//		//left
-		icr_start[com_d]=ic_start[com_d]-1;
-		icr_start[oth_d]=ic_start[oth_d]-1;
-		icr_stop[com_d]=ic_start[com_d];
-		icr_stop[oth_d]=ic_stop[oth_d]+1;
-
-		int send_pll_l = get_num_p(icr_start, icr_stop, cells);
-		int recv_pll_l;
-		real send_pll[send_pll_l*CD_P_SZE];
-		code_pl(send_pll, icr_start, icr_stop, CD_P_SZE, cells);
-//		std::cout<<"P"<<rank<<"-Sendrecv-left-length("<<neigh_upper[com_d]<<", 5, "<<neigh_upper[com_d]<<", 2)\n";
-		MPI::COMM_WORLD.Sendrecv(&send_pll_l, 1, MPI::INT, neigh_lower[com_d], 5, &recv_pll_l, 1, MPI::INT, neigh_lower[com_d], 6);
-		delete_pl(icr_start, icr_stop, cells);
-		real recv_pll[recv_pll_l*CD_P_SZE];
-		MPI::COMM_WORLD.Sendrecv(&send_pll, send_pll_l*CD_P_SZE, MPI::DOUBLE, neigh_lower[com_d], 7, &recv_pll, recv_pll_l*CD_P_SZE, MPI::DOUBLE, neigh_lower[com_d], 8);
-		uncodePl(recv_pll, icr_start, icr_stop, recv_pll_l, CD_P_SZE, cells);
-	}else{
-		// left
-		icr_start[com_d]=ic_start[com_d]-1;
-		icr_start[oth_d]=ic_start[oth_d]-1;
-		icr_stop[com_d]=ic_start[com_d];
-		icr_stop[oth_d]=ic_stop[oth_d]+1;
-
-		int send_pll_l = get_num_p(icr_start, icr_stop, cells);
-		int recv_pll_l;
-		real send_pll[send_pll_l*CD_P_SZE];
-		code_pl(send_pll, icr_start, icr_stop, CD_P_SZE, cells);
-//		std::cout<<"P"<<rank<<"-Sendrecv("<<neigh_lower[com_d]<<", 2, "<<neigh_lower[com_d]<<", 1)\n";
-//		std::cout<<"P"<<rank<<" comm("<<com_d<<")-before sending length\n";
-		MPI::COMM_WORLD.Sendrecv(&send_pll_l, 1, MPI::INT, neigh_lower[com_d], 2, &recv_pll_l, 1, MPI::INT, neigh_lower[com_d], 1);
-		real recv_pll[recv_pll_l*CD_P_SZE];
-//		std::cout<<"P"<<rank<<"-Sendrecv("<<send_pll_l*CD_P_SZE<<" ,"<<neigh_lower[com_d]<<", 4, "<<recv_pll_l*CD_P_SZE<<" ,"<<neigh_lower[com_d]<<", 3)\n";
-//		std::cout<<"P"<<rank<<" comm("<<com_d<<")-before sending list\n";
-		MPI::COMM_WORLD.Sendrecv(&send_pll, send_pll_l*CD_P_SZE, MPI::DOUBLE, neigh_lower[com_d], 4, &recv_pll, recv_pll_l*CD_P_SZE, MPI::DOUBLE, neigh_lower[com_d], 3);
-		uncodePl(recv_pll, icr_start, icr_stop, recv_pll_l, CD_P_SZE, cells);
-
-//		std::cout<<"P"<<rank<<" comm("<<com_d<<")-half time\n";
-		// right
-		icr_start[com_d]=ic_stop[com_d];
-		icr_start[oth_d]=ic_start[oth_d]-1;
-		icr_stop[com_d]=ic_stop[com_d]+1;
-		icr_stop[oth_d]=ic_stop[oth_d]+1;
-
-		int send_plr_l = get_num_p(icr_start, icr_stop, cells);
-		int recv_plr_l;
-		real send_plr[send_plr_l*CD_P_SZE];
-		code_pl(send_plr, icr_start, icr_stop, CD_P_SZE, cells);
-		MPI::COMM_WORLD.Sendrecv(&send_plr_l, 1, MPI::INT, neigh_upper[com_d], 6, &recv_plr_l, 1, MPI::INT, neigh_upper[com_d], 5);
-		real recv_plr[recv_plr_l*CD_P_SZE];
-		MPI::COMM_WORLD.Sendrecv(&send_plr, send_plr_l*CD_P_SZE, MPI::DOUBLE, neigh_upper[com_d], 8, &recv_plr, recv_plr_l*CD_P_SZE, MPI::DOUBLE, neigh_upper[com_d], 7);
-		uncodePl(recv_plr, icr_start, icr_stop, recv_plr_l, CD_P_SZE, cells);
-	}
-
-	adding_to_pl(cells);
-	// Definition: 	right = ascending in com_d direction
-	// 				left = descending in com_d direction
+//		icr_start[com_d]=ic_stop[com_d];
+//		icr_start[oth_d]=ic_start[oth_d]-1;
+//		icr_stop[com_d]=ic_stop[com_d]+1;
+//		icr_stop[oth_d]=ic_stop[oth_d]+1;
+//		int send_plr_l = get_num_p(icr_start, icr_stop, cells);
+//		int recv_plr_l;
+//		real send_plr[send_plr_l*CD_P_SZE];
+//		code_pl(send_plr, icr_start, icr_stop, CD_P_SZE, cells);
+////		std::cout<<"P"<<rank<<"-Sendrecv-right-length("<<neigh_upper[com_d]<<", 1, "<<neigh_upper[com_d]<<", 2)\n";
+////		std::cout<<"P"<<rank<<" comm("<<com_d<<")-before sending length\n";
+//		MPI::COMM_WORLD.Sendrecv(&send_plr_l, 1, MPI::INT, neigh_upper[com_d], 1, &recv_plr_l, 1, MPI::INT, neigh_upper[com_d], 2);
+//////		std::cout<<"P"<<rank<<" received length "<<recv_plr_l<<"\n";
+//		delete_pl(icr_start, icr_stop, cells);
+//		real recv_plr[recv_plr_l*CD_P_SZE];
+////		std::cout<<"P"<<rank<<"-Sendrecv-right-list("<<send_plr_l*CD_P_SZE<<" ,"<<neigh_upper[com_d]<<", 3, "<<recv_plr_l*CD_P_SZE<<" ,"<<neigh_upper[com_d]<<", 4)\n";
+////		std::cout<<"P"<<rank<<" comm("<<com_d<<")-before sending list\n";
+//		MPI::COMM_WORLD.Sendrecv(&send_plr, send_plr_l*CD_P_SZE, MPI::DOUBLE, neigh_upper[com_d], 3, &recv_plr, recv_plr_l*CD_P_SZE, MPI::DOUBLE, neigh_upper[com_d], 4);
+////		std::cout<<"P"<<rank<<" received list\n";
+//		uncodePl(recv_plr, icr_start, icr_stop, recv_plr_l, CD_P_SZE, cells);
+////
+////		std::cout<<"P"<<rank<<" comm("<<com_d<<")-half time\n";
+////		//left
+//		icr_start[com_d]=ic_start[com_d]-1;
+//		icr_start[oth_d]=ic_start[oth_d]-1;
+//		icr_stop[com_d]=ic_start[com_d];
+//		icr_stop[oth_d]=ic_stop[oth_d]+1;
+//
+//		int send_pll_l = get_num_p(icr_start, icr_stop, cells);
+//		int recv_pll_l;
+//		real send_pll[send_pll_l*CD_P_SZE];
+//		code_pl(send_pll, icr_start, icr_stop, CD_P_SZE, cells);
+////		std::cout<<"P"<<rank<<"-Sendrecv-left-length("<<neigh_upper[com_d]<<", 5, "<<neigh_upper[com_d]<<", 2)\n";
+//		MPI::COMM_WORLD.Sendrecv(&send_pll_l, 1, MPI::INT, neigh_lower[com_d], 5, &recv_pll_l, 1, MPI::INT, neigh_lower[com_d], 6);
+//		delete_pl(icr_start, icr_stop, cells);
+//		real recv_pll[recv_pll_l*CD_P_SZE];
+//		MPI::COMM_WORLD.Sendrecv(&send_pll, send_pll_l*CD_P_SZE, MPI::DOUBLE, neigh_lower[com_d], 7, &recv_pll, recv_pll_l*CD_P_SZE, MPI::DOUBLE, neigh_lower[com_d], 8);
+//		uncodePl(recv_pll, icr_start, icr_stop, recv_pll_l, CD_P_SZE, cells);
+//	}else{
+//		// left
+//		icr_start[com_d]=ic_start[com_d]-1;
+//		icr_start[oth_d]=ic_start[oth_d]-1;
+//		icr_stop[com_d]=ic_start[com_d];
+//		icr_stop[oth_d]=ic_stop[oth_d]+1;
+//
+//		int send_pll_l = get_num_p(icr_start, icr_stop, cells);
+//		int recv_pll_l;
+//		real send_pll[send_pll_l*CD_P_SZE];
+//		code_pl(send_pll, icr_start, icr_stop, CD_P_SZE, cells);
+////		std::cout<<"P"<<rank<<"-Sendrecv("<<neigh_lower[com_d]<<", 2, "<<neigh_lower[com_d]<<", 1)\n";
+////		std::cout<<"P"<<rank<<" comm("<<com_d<<")-before sending length\n";
+//		MPI::COMM_WORLD.Sendrecv(&send_pll_l, 1, MPI::INT, neigh_lower[com_d], 2, &recv_pll_l, 1, MPI::INT, neigh_lower[com_d], 1);
+//		real recv_pll[recv_pll_l*CD_P_SZE];
+////		std::cout<<"P"<<rank<<"-Sendrecv("<<send_pll_l*CD_P_SZE<<" ,"<<neigh_lower[com_d]<<", 4, "<<recv_pll_l*CD_P_SZE<<" ,"<<neigh_lower[com_d]<<", 3)\n";
+////		std::cout<<"P"<<rank<<" comm("<<com_d<<")-before sending list\n";
+//		MPI::COMM_WORLD.Sendrecv(&send_pll, send_pll_l*CD_P_SZE, MPI::DOUBLE, neigh_lower[com_d], 4, &recv_pll, recv_pll_l*CD_P_SZE, MPI::DOUBLE, neigh_lower[com_d], 3);
+//		uncodePl(recv_pll, icr_start, icr_stop, recv_pll_l, CD_P_SZE, cells);
+//
+////		std::cout<<"P"<<rank<<" comm("<<com_d<<")-half time\n";
+//		// right
+//		icr_start[com_d]=ic_stop[com_d];
+//		icr_start[oth_d]=ic_start[oth_d]-1;
+//		icr_stop[com_d]=ic_stop[com_d]+1;
+//		icr_stop[oth_d]=ic_stop[oth_d]+1;
+//
+//		int send_plr_l = get_num_p(icr_start, icr_stop, cells);
+//		int recv_plr_l;
+//		real send_plr[send_plr_l*CD_P_SZE];
+//		code_pl(send_plr, icr_start, icr_stop, CD_P_SZE, cells);
+//		MPI::COMM_WORLD.Sendrecv(&send_plr_l, 1, MPI::INT, neigh_upper[com_d], 6, &recv_plr_l, 1, MPI::INT, neigh_upper[com_d], 5);
+//		real recv_plr[recv_plr_l*CD_P_SZE];
+//		MPI::COMM_WORLD.Sendrecv(&send_plr, send_plr_l*CD_P_SZE, MPI::DOUBLE, neigh_upper[com_d], 8, &recv_plr, recv_plr_l*CD_P_SZE, MPI::DOUBLE, neigh_upper[com_d], 7);
+//		uncodePl(recv_plr, icr_start, icr_stop, recv_plr_l, CD_P_SZE, cells);
+//	}
+//
+//	adding_to_pl(cells);
+//	// Definition: 	right = ascending in com_d direction
+//	// 				left = descending in com_d direction
 }
 
 void SimProcess::delete_pl(int* icr_start, int* icr_stop, Cell* cells){
@@ -836,10 +876,10 @@ void SimProcess::uncodePl(real* recv_pl, int* icr_start, int*icr_stop, int lengt
 
 		//Periodic Boundaries
 		for(int d=0; d<DIM; d++){
-			if(ic_start[d]==0&&p->X[d]>global_size[d]-cell_size[d]){
+			if(neigh_lower[d]>=rank&&p->X[d]>global_size[d]-cell_size[d]){
 				p->X[d]-=global_size[d];
 			}
-			if(neigh_upper[d]<rank && p->X[d]<cell_size[d]){
+			if(neigh_upper[d]<=rank && p->X[d]<cell_size[d]){
 				p->X[d]+=global_size[d];
 			}
 		}

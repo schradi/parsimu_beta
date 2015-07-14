@@ -53,6 +53,7 @@ int main(int argc, char* argv[]) {
 	sim_p->output(cells, 0);
 	MPI::COMM_WORLD.Barrier();
 	if(global_np[0]!=1) sim_p->communicate(cells);
+	sim_p->output(cells, 1);
 
 	sim_p->timeIntegration(cells);
 	MPI::COMM_WORLD.Barrier();
