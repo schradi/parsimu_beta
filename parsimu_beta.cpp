@@ -20,7 +20,7 @@
 int main(int argc, char* argv[]) {
 	int c_nump;
 	if(argc>=2){
-		c_nump=(int)sqrt(atoi(argv[1]));
+		c_nump=atoi(argv[1]);
 	}
 	MPI::Init (argc, argv);
 	// calculate global_np

@@ -880,12 +880,41 @@ void SimProcess::code_pl(real* send_pl, int* icr_start, int* icr_stop, int size,
 	}
 }
 
+//void SimProcess::create_particles(ParticleList* new_pl, real* r_start, real* r_stop, real resolution, real* p_V){
+//	real pos[DIM];
+////	new_pl->next=NULL;
+//	ParticleList* tmp;
+//	int id_c=0;
+//	std::cout<<"create_particles(("<<r_start[0]<<","<<r_start[1]<<"),("<<r_stop[0]<<","<<r_stop[1]<<"),"<<resolution<<",("<<p_V[0]<<","<<p_V[1]<<"))\n";
+//	for(pos[1]=r_start[1]; pos[1]<r_stop[1] && pos[1]<global_size[1]; pos[1]+=resolution){
+//		for(pos[0]=r_start[0]; pos[0]<r_stop[0] && pos[0]<global_size[0]; pos[0]+=resolution){
+//			// Da new_pl auf eine feste Adresse zeigt, kann diese nicht verändert werden. Lösung: Arbeiten mit new_pl->next
+//			if(new_pl->p!=NULL){
+//				tmp=new_pl->next;
+//				new_pl->next=new ParticleList;
+//				new_pl->next->next=tmp;
+//				new_pl->next->p=new_pl->p;
+//				new_pl->p=NULL;
+//			}
+//			new_pl->p= new Particle;
+//			new_pl->p->id=id_c;
+//			id_c++;
+//			new_pl->p->m=1;
+//			for(int d=0; d<DIM; d++){
+//				new_pl->p->X[d]=pos[d];
+//				new_pl->p->V[d]=p_V[d];
+//			}
+//		}
+//	}
+//	std::cout<<"Included Particles\t"<<id_c<<"\n";
+//}
+
 void SimProcess::create_particles(ParticleList* new_pl, real* r_start, real* r_stop, real resolution, real* p_V){
 	real pos[DIM];
 //	new_pl->next=NULL;
 	ParticleList* tmp;
 	int id_c=0;
-	std::cout<<"create_particles(("<<r_start[0]<<","<<r_stop[1]<<"),("<<r_stop[0]<<","<<r_stop[1]<<"),"<<resolution<<",("<<p_V[0]<<","<<p_V[1]<<"))\n";
+	std::cout<<"create_particles(("<<r_start[0]<<","<<r_start[1]<<"),("<<r_stop[0]<<","<<r_stop[1]<<"),"<<resolution<<",("<<p_V[0]<<","<<p_V[1]<<"))\n";
 	for(pos[1]=r_start[1]; pos[1]<r_stop[1] && pos[1]<global_size[1]; pos[1]+=resolution){
 		for(pos[0]=r_start[0]; pos[0]<r_stop[0] && pos[0]<global_size[0]; pos[0]+=resolution){
 			// Da new_pl auf eine feste Adresse zeigt, kann diese nicht verändert werden. Lösung: Arbeiten mit new_pl->next
@@ -1028,14 +1057,14 @@ void SimProcess::insert_particles(ParticleList* new_pl){
 		real r_stop[DIM];
 		real res;
 		real V[DIM];
-		r_start[0]=1;
-		r_start[1]=1;
-		r_stop[0]=global_size[0]-1;
-		r_stop[1]=global_size[1]-1;
+		r_stop[0]=global_size[0];
+		r_stop[1]=global_size[1];
 		V[0]=0.1;
 		V[1]=0.1;
-		res = (global_size[0]-2)/num_part;
+		res = global_size[0]/num_part;
 		num_part=0;
+		r_start[0]=0.5*res;
+		r_start[1]=0.5*res;
 		create_particles(new_pl, r_start, r_stop, res, V);
 	}
 }
