@@ -12,33 +12,33 @@ void SimProcess::timeIntegration(Cell* cells){
 	t=delta_t;
 	long int t_step_nr=1;
 	if(DOKU>=0) if(rank==0) std::cout<<"-----------------------\n- starting Simulation -\n-----------------------\n";
-	clock_t t_start;
+	time_t t_start;
 
 	while (t<t_end && !aborted){
 		MPI::COMM_WORLD.Barrier();
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compF\n";
-		if(rank==0) t_start=clock();
+		if(rank==0) time(&t_start);
 		compF(cells);
 		MPI::COMM_WORLD.Barrier();
 		if(rank==0) timerList->calc_avg_time("compF", t_start);
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compV\n";
-		if(rank==0) t_start=clock();
+		if(rank==0) time(&t_start);
 		compV(cells);
 		MPI::COMM_WORLD.Barrier();
 		if(rank==0) timerList->calc_avg_time("compV", t_start);
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compX\n";
-		if(rank==0) t_start=clock();
+		if(rank==0) time(&t_start);
 		compX(cells);
 		MPI::COMM_WORLD.Barrier();
 		if(rank==0) timerList->calc_avg_time("compX", t_start);
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - moveParticles\n";
-		if(rank==0) t_start=clock();
+		if(rank==0) time(&t_start);
 		moveParticles(cells);
 		MPI::COMM_WORLD.Barrier();
 		if(rank==0) timerList->calc_avg_time("moveParticles", t_start);
 		if(global_np[0]!=1){
 			if(DOKU>=2) std::cout<<"Pr "<<rank<<" - communicate\n";
-			if(rank==0) t_start=clock();
+			if(rank==0) time(&t_start);
 			communicate(cells);
 			MPI::COMM_WORLD.Barrier();
 			if(rank==0) timerList->calc_avg_time("communicate", t_start);
@@ -46,7 +46,7 @@ void SimProcess::timeIntegration(Cell* cells){
 		if(t_step_nr%output_resolution==0){
 			if(DOKU>=1) if(rank==0) std::cout<<"Process: "<<(int) ((t/t_end)*100)<<"%\n";
 			if(DOKU>=2) std::cout<<"Pr "<<rank<<" - output\n";
-			if(rank==0) t_start=clock();
+			if(rank==0) time(&t_start);
 			output(cells, (int) t_step_nr/output_resolution);
 			if(rank==0) timerList->calc_avg_time("output", t_start);
 
