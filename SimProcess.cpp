@@ -36,14 +36,15 @@ void SimProcess::timeIntegration(Cell* cells){
 		moveParticles(cells);
 		MPI::COMM_WORLD.Barrier();
 		if(rank==0) timerList->calc_avg_time("moveParticles", t_start);
-		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - communicate\n";
-		if(rank==0) t_start=clock();
-		communicate(cells);
-		MPI::COMM_WORLD.Barrier();
-		if(rank==0) timerList->calc_avg_time("communicate", t_start);
+		if(global_np[0]!=1){
+			if(DOKU>=2) std::cout<<"Pr "<<rank<<" - communicate\n";
+			if(rank==0) t_start=clock();
+			communicate(cells);
+			MPI::COMM_WORLD.Barrier();
+			if(rank==0) timerList->calc_avg_time("communicate", t_start);
+		}
 		if(t_step_nr%output_resolution==0){
-
-			if(DOKU>=1) if(rank==0) std::cout<<"Process: "<<(int) ((t/t_end)*100)<<"%\n";
+			if(DOKU>=1) if(rank==0) std::cout<<"\r"<<"Process: "<<(int) ((t/t_end)*100)<<"%";
 			if(DOKU>=2) std::cout<<"Pr "<<rank<<" - output\n";
 			if(rank==0) t_start=clock();
 			output(cells, (int) t_step_nr/output_resolution);
@@ -1033,7 +1034,7 @@ void SimProcess::insert_particles(ParticleList* new_pl){
 		r_stop[1]=global_size[1]-1;
 		V[0]=0.1;
 		V[1]=0.1;
-		res = (global_size[0]-1)/num_part;
+		res = (global_size[0]-2)/num_part;
 		num_part=0;
 		create_particles(new_pl, r_start, r_stop, res, V);
 	}

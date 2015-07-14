@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
 			MPI::Finalize();
 			return 0;
 		}
-		if(global_np[d]%2!=0){
+		if(global_np[d]%2!=0 && global_np[d]!=1){
 			//Schachbrettmuster funktioniert sonst nicht, wird bei kommunikation benötigt
 			std::cout<<"\n-----ABORTED!-----\nwrong number of processes.\n\n";
 			MPI::Finalize();
@@ -52,11 +52,12 @@ int main(int argc, char* argv[]) {
 
 	sim_p->output(cells, 0);
 	MPI::COMM_WORLD.Barrier();
-	sim_p->communicate(cells);
+	if(global_np[0]!=1) sim_p->communicate(cells);
 
 	sim_p->timeIntegration(cells);
 	MPI::COMM_WORLD.Barrier();
 	if(sim_p->rank==0){
+		std::cout<<"times.csv:\n";
 		std::fstream file;
 //			if(npart==sqrt(c_start)){
 //				file.open("times.csv", std::ios::out | std::ios::trunc);
@@ -71,8 +72,10 @@ int main(int argc, char* argv[]) {
 			file<<c_nump*c_nump;
 		for(TimerList* ti=sim_p->timerList; ti!=NULL; ti=ti->next){
 			file<<" "<<ti->t->time;
+			std::cout<<ti->t->tag<<" ";
 		}
 		file<<"\n";
+		std::cout<<"\n";
 		file.close();
 	}
 
