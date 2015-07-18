@@ -8,70 +8,55 @@
 #include "SimProcess.h"
 
 void SimProcess::timeIntegration(Cell* cells){
-	// todo: Zeit stoppen, die zur Berechnung benötigt wird, zur Lastbalancierung interessant
 	t=delta_t;
 	long int t_step_nr=1;
 	if(DOKU>=0) if(rank==0) std::cout<<"-----------------------\n- starting Simulation -\n-----------------------\n";
-	time_t t_start;
-
+	clock_t t_start;
 	while (t<t_end && !aborted){
 		MPI::COMM_WORLD.Barrier();
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compF\n";
-		if(rank==0) time(&t_start);
+		if(rank==0) t_start=clock();
 		compF(cells);
 		MPI::COMM_WORLD.Barrier();
 		if(rank==0) timerList->calc_avg_time("compF", t_start);
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compV\n";
-		if(rank==0) time(&t_start);
+		if(rank==0) t_start=clock();
 		compV(cells);
 		MPI::COMM_WORLD.Barrier();
 		if(rank==0) timerList->calc_avg_time("compV", t_start);
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compX\n";
-		if(rank==0) time(&t_start);
+		if(rank==0) t_start=clock();
 		compX(cells);
 		MPI::COMM_WORLD.Barrier();
 		if(rank==0) timerList->calc_avg_time("compX", t_start);
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - moveParticles\n";
-		if(rank==0) time(&t_start);
+		if(rank==0) t_start=clock();
 		moveParticles(cells);
 		MPI::COMM_WORLD.Barrier();
 		if(rank==0) timerList->calc_avg_time("moveParticles", t_start);
 		if(global_np[0]!=1){
 			if(DOKU>=2) std::cout<<"Pr "<<rank<<" - communicate\n";
-			if(rank==0) time(&t_start);
+			if(rank==0) t_start=clock();
 			communicate(cells);
 			MPI::COMM_WORLD.Barrier();
 			if(rank==0) timerList->calc_avg_time("communicate", t_start);
 		}
 		if(t_step_nr%output_resolution==0){
-			if(DOKU>=1) if(rank==0) std::cout<<"Process: "<<(int) ((t/t_end)*100)<<"%\n";
 			if(DOKU>=2) std::cout<<"Pr "<<rank<<" - output\n";
-			if(rank==0) time(&t_start);
+			if(rank==0) t_start=clock();
 			output(cells, (int) t_step_nr/output_resolution);
 			if(rank==0) timerList->calc_avg_time("output", t_start);
-
 		}
+//		if(rank == 0) std::cout<<"t_step_nr: "<<100*t_step_nr<<" anz: "<<(int) (t_end/delta_t)<<"\n";
+		if(rank == 0) if((t_step_nr*100%(int)(t_end/delta_t))==0) std::cout<<"Process: "<<(int)((t/t_end)*100) + 1 <<"%\n";
 		t+=delta_t;
 		t_step_nr++;
-//		status_output("processing");
 	}
-//	for(timerList* ti=tl; ti!=NULL; ti=ti->next){
-//		std::cout<<ti->t->tag<<"\t"<<ti->t->time<<"\n";
-//	}
-//	if(rank==0){
-//		std::cout<<"Duration CompF: "<<t_compF/t_step_nr<<"\n";
-//		std::cout<<"Duration CompV: "<<t_compV/t_step_nr<<"\n";
-//		std::cout<<"Duration CompX: "<<t_compX/t_step_nr<<"\n";
-//		std::cout<<"Duration moveParticles: "<<t_moveParticles/t_step_nr<<"\n";
-//		std::cout<<"Duration communicate: "<<t_communicate/t_step_nr<<"\n";
-//		std::cout<<"Duration output: "<<t_output*output_resolution/t_step_nr<<"\n";
-//	}
 }
 
 void SimProcess::output(Cell* cells, int outp_nr){
 	MPI::COMM_WORLD.Barrier();
 	int ic[DIM];
-
 
 //	// Important: just particles stored in pl are considered
 
@@ -137,7 +122,7 @@ void SimProcess::output(Cell* cells, int outp_nr){
 		strcat(outputfile_new, cline_nr);
 
 		file.open(outputfile_new, std::ios::out|std::ios::trunc);
-		file<<"x coord, y coord, x velocity, y velocity\n";
+		//file<<"x coord, y coord, x velocity, y velocity\n";
 		file<<"0,0,0,0\n";
 		file<<global_size[0]<<",0,0,0\n";
 		file<<"0,"<<global_size[1]<<",0,0\n";
@@ -216,29 +201,36 @@ void SimProcess::compF(Particle* p_i, Particle* p_j){
 	F[1]=p_i->X[1]-p_j->X[1];
 	force(F);
 	for(int d=0; d<DIM; d++){
+		p_i->F_old[d]=p_i->F[d];
 		p_i->F[d]=F[d];
-		p_j->F[d]=F[d];
 	}
 }
 
 void SimProcess::compV(Cell* cells){
 	Cell* c;
 	int ic[DIM];
-	for (ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
-		for (ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
-			// for each Cell
-			c=&cells[local_index(ic)];
-			for(ParticleList* pi=c->pl; pi!=NULL; pi=pi->next){
-				// for each Particle within this Cell
-				for(int d=0; d<DIM; d++){
-					pi->p->V[d]=pi->p->V[d]+pi->p->F[d]*delta_t/pi->p->m;
-//					if(pi->p->V[d]>=max_V){
-//						aborted=true;
-//						std::cout<<"MAX V was to small";
-//					}
+	try{
+		for (ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
+			for (ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
+				// for each Cell
+				c=&cells[local_index(ic)];
+				for(ParticleList* pi=c->pl; pi!=NULL; pi=pi->next){
+					// for each Particle within this Cell
+					for(int d=0; d<DIM; d++){
+						pi->p->V[d]=pi->p->V[d]+pi->p->F[d]*delta_t/pi->p->m;
+//						if(pi->p->V[d]>=max_V){
+//							pi->p->V[d]=0;
+//							pi->p->F[d]=0;
+//							pi->p->F_old[d]=0;
+////							throw 1;
+//						}
+					}
 				}
 			}
 		}
+	}
+	catch(int e){
+		if(e==1) std::cout<<"MAX V was to small\n";
 	}
 }
 
@@ -250,8 +242,13 @@ void SimProcess::compX(Cell* cells){
 			// for each Cell
 			for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
 				// for each Particle within this Cell
-				for(int d=0; d<DIM; d++)
-				pi->p->X[d]+=pi->p->V[d]*delta_t+0.5*pi->p->F[d]/pi->p->m*delta_t*delta_t;
+				for(int d=0; d<DIM; d++){
+					if(pi->p->V[d]*delta_t+0.5*pi->p->F_old[d]/pi->p->m*delta_t*delta_t<cell_size[d]){
+						pi->p->X[d]+=pi->p->V[d]*delta_t+0.5*pi->p->F_old[d]/pi->p->m*delta_t*delta_t;
+					}else{
+						std::cout<<"Falsche Simulation\n";
+					}
+				}
 			}
 		}
 	}
@@ -352,6 +349,7 @@ SimProcess::SimProcess(){
 		output_resolution=0;
 		sigma=0;
 		epsilon=0;
+		Vvar=0;
 		while(file >> line){
 			if(!strcmp(line, "r_cut")){
 				file >> line;
@@ -382,6 +380,10 @@ SimProcess::SimProcess(){
 				file >> line;
 				epsilon = atof(line);
 			}
+			if(!strcmp(line, "Vvar")){
+				file >> line;
+				Vvar = atof(line);
+			}
 		}
 		if(r_cut==0) std::cout<< "r_cut was not declared\n";
 		if(global_size[0]==0) std::cout<< "global_size was not declared\n";
@@ -390,6 +392,7 @@ SimProcess::SimProcess(){
 		if(output_resolution==0) std::cout<< "output_resolution was not declared\n";
 		if(sigma==0) std::cout<< "sigma was not declared\n";
 		if(epsilon==0) std::cout<< "epsilon was not declared\n";
+		if(Vvar==0) std::cout<< "Vvar was not declared\n";
 
 		file.close();
 		real dist[DIM];
@@ -409,7 +412,6 @@ SimProcess::SimProcess(){
 //		}
 
 		// Set important global variables
-		std::cout<<"np\t"<<np<<"\n";
 		for(int d=0; d<DIM; d++){
 			global_np[d]= pow(np,(double) 1/DIM);
 			local_size[d]=global_size[d]/global_np[d];
@@ -534,8 +536,10 @@ SimProcess::SimProcess(){
 		file<<"output_resolution\t"<<output_resolution<<"\n";
 		file<<"sigma\t"<<sigma<<"\n";
 		file<<"epsilon\t"<<epsilon<<"\n";
+		file<<"Vvar\t"<<Vvar<<"\n";
 
 		file<<"\n---Calculated Global Settings---\n";
+		file<<"force(r_cut)\t"<<lj_force(r_cut);
 		for(int d=0; d<DIM; d++){
 			file<<"global_np["<<d<<"]\t"<<global_np[d]<<"\n";
 		}
@@ -574,12 +578,10 @@ SimProcess::SimProcess(){
 		}
 		file.close();
 	}
-
 	std::cout<<"P "<<rank<<" - ready to start\n";
 }
 
 void SimProcess::create_cells(Cell* cells){
-	// Create Cells
 	real p_cell_start[DIM];
 	int ic[DIM];
 	for (ic[1]=ic_start[1]-1; ic[1]<=ic_stop[1]+1; ic[1]++){
@@ -587,7 +589,6 @@ void SimProcess::create_cells(Cell* cells){
 			for (int d=0; d<DIM; d++){
 				p_cell_start[d]=ic[d]*r_cut;
 			}
-//			std::cout<<"index("<<ic[0]<<"/"<<ic[1]<<")="<<index(ic, global_nc)<<"\n";
 			cells[local_index(ic)].set_params(p_cell_start, index(ic, global_nc), r_cut);
 		}
 	}
@@ -645,8 +646,9 @@ void SimProcess::communicate(Cell* cells){
 
 //
 //
-	communicate(0, cells);
-	communicate(1, cells);
+	for(int d=0; d<DIM; d++){
+		communicate(d, cells);
+	}
 }
 
 void SimProcess::communicate(int com_d, Cell* cells){
@@ -791,7 +793,9 @@ void SimProcess::delete_pl(int* icr_start, int* icr_stop, Cell* cells){
 	int ic[DIM];
 	for(ic[1]=icr_start[1]; ic[1]<=icr_stop[1]; ic[1]++){
 		for(ic[0]=icr_start[0]; ic[0]<=icr_stop[0]; ic[0]++){
+			num_part-=cells[local_index(ic)].num_part;
 			cells[local_index(ic)].deletePl();
+
 		}
 	}
 }
@@ -960,7 +964,8 @@ void SimProcess::create_particles(ParticleList* new_pl, real* r_start, real* r_s
 //	new_pl->next=NULL;
 	ParticleList* tmp;
 	int id_c=0;
-	std::cout<<"create_particles(("<<r_start[0]<<","<<r_start[1]<<"),("<<r_stop[0]<<","<<r_stop[1]<<"),"<<resolution<<",("<<p_V[0]<<","<<p_V[1]<<"))\n";
+	srand(time(NULL));
+//	std::cout<<"create_particles(("<<r_start[0]<<","<<r_start[1]<<"),("<<r_stop[0]<<","<<r_stop[1]<<"),"<<resolution<<",("<<p_V[0]<<","<<p_V[1]<<"))\n";
 	for(pos[1]=r_start[1]; pos[1]<r_stop[1] && pos[1]<global_size[1]; pos[1]+=resolution){
 		for(pos[0]=r_start[0]; pos[0]<r_stop[0] && pos[0]<global_size[0]; pos[0]+=resolution){
 			// Da new_pl auf eine feste Adresse zeigt, kann diese nicht verändert werden. Lösung: Arbeiten mit new_pl->next
@@ -977,7 +982,7 @@ void SimProcess::create_particles(ParticleList* new_pl, real* r_start, real* r_s
 			new_pl->p->m=1;
 			for(int d=0; d<DIM; d++){
 				new_pl->p->X[d]=pos[d];
-				new_pl->p->V[d]=p_V[d];
+				new_pl->p->V[d]=p_V[d]+(Vvar-(float) (rand()) / ((float) (RAND_MAX/(Vvar*2))));
 			}
 		}
 	}
@@ -1105,8 +1110,8 @@ void SimProcess::insert_particles(ParticleList* new_pl){
 		real V[DIM];
 		r_stop[0]=global_size[0];
 		r_stop[1]=global_size[1];
-		V[0]=0.1;
-		V[1]=0.1;
+		V[0]=0;
+		V[1]=0;
 		res = global_size[0]/num_part;
 		num_part=0;
 		r_start[0]=0.5*res;

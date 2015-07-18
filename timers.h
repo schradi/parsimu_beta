@@ -13,12 +13,12 @@
 
 class Timer{
 public:
-	time_t timer;
+	clock_t timer;
 	std::string tag;
 	long int count;
 
 	Timer (){
-		time(&timer);
+		timer=clock();
 		count=0;
 		tag="all";
 	};
@@ -27,8 +27,8 @@ public:
 		tag=p_tag;
 		count=0;
 	}
-	void calc_avg_time(time_t start);
-	void calc_avg_time(time_t start, time_t curr);
+	void calc_avg_time(clock_t start);
+	void calc_avg_time(clock_t start, clock_t curr);
 };
 
 class TimerList{
@@ -44,7 +44,7 @@ public:
 		t=new Timer(p_tag);
 		next=NULL;
 	}
-	void calc_avg_time(std::string p_tag, time_t start);
+	void calc_avg_time(std::string p_tag, clock_t start);
 };
 
 

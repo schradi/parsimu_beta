@@ -49,6 +49,7 @@ public:
 	real sigma;					/**< Parameter sigma for the Lennard-Jones-Potential*/
 	real epsilon; 				/**< Parameter epsilon for the Lennard-Jones-Potential*/
 	TimerList* timerList;
+	real Vvar;
 
 	int output_resolution;
 	real t;
