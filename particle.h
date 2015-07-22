@@ -16,16 +16,16 @@ public:
 	real m;				/**< Mass of the particle*/
 	real X[DIM];		/**< Position of the particle*/
 	real V[DIM];		/**< Velocity of the particle*/
-	real F[DIM];		/**< Force-Vector of the particle in the next timestep*/
-	real F_old[DIM];
+	real a[DIM];		/**< Force-Vector of the particle in the next timestep*/
+	real a_old[DIM];
 	Particle(){
 		id=-1;
 		m=1;
 		for(int d=0; d<DIM; d++){
 			X[d]=0;
 			V[d]=0;
-			F[d]=0;
-			F_old[d]=0;
+			a[d]=0;
+			a_old[d]=0;
 		}
 	}
 };

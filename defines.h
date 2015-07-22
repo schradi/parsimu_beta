@@ -16,9 +16,7 @@
 #define DET_DOKU false
 
 #define DIM 2 /**< Dimension of the Simulation*/
-#define CD_P_SZE 6
-#define OUTP_SZE 5
-#define NR_PROCS 4 /**< Number of Processes*/
+#define COM_SZE 8
 #define DOKU 1
 
 //Used Datatype

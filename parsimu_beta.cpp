@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <fstream>
+#include <mpi.h>
+
 //#include <direct.h>
 
 #include "defines.h"
@@ -55,7 +57,6 @@ int main(int argc, char* argv[]) {
 	sim_p->output(cells, 0);
 	MPI::COMM_WORLD.Barrier();
 	if(global_np[0]!=1) sim_p->communicate(cells);
-	sim_p->output(cells, 6);
 
 	sim_p->timeIntegration(cells);
 	MPI::COMM_WORLD.Barrier();

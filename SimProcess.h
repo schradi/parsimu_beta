@@ -12,7 +12,6 @@
 #include "particle.h"
 #include "defines.h"
 #include <math.h>
-#include <vector>
 #include <mpi.h>
 #include <stdio.h>
 #include <iostream>
@@ -70,7 +69,7 @@ public:
 	/**
 	 * Calculates the Force between all Particles within the Cells of this Process
 	 */
-	void compF(Cell* cells);
+	void compA(Cell* cells);
 
 	/**
 	 * Calculates the Force between two specific Particles
@@ -78,7 +77,12 @@ public:
 	 * @param p_i Particle no 1
 	 * @param p_j Particle no 2
 	 */
-	void compF(Particle* p_i, Particle* p_j);
+	void compA(Particle* p_i, Particle* p_j);
+
+	/**
+	 * Calculates the Force between all Particles within the Cells of this Process
+	 */
+	void compE(Cell* cells);
 
 	/**
 	 * Calculates the new Velocity of the particles caused by the new force
@@ -91,6 +95,8 @@ public:
 	 * @param delta_t is the lenght of the timestep
 	 */
 	void compX(Cell* cells);
+
+
 
 	/**
 	 * Calculates the force caused by the Lennard-Jones-Potential in a distance of p_X
@@ -182,23 +188,16 @@ public:
 	/**
 	 * Collect all pl of cells in a range and convert them to an array of double
 	 */
-	void code_pl(real* send_pl, int* icr_start, int* icr_stop, int size, Cell* cells);
+	void code_range(real* send_pl, int* icr_start, int* icr_stop, Cell* cells);
 
+	void code_p(Particle* p, real* code);
 	/**
 	* Convert an array of double into Particles and sort them in cells in a specified range
 	*/
-	void uncodePl(real* recv_pl, int* icr_start, int*icr_stop, int length_recv, int size, Cell* cells);
+	void uncode_in_range(real* recv_pl, int* icr_start, int*icr_stop, int length_recv, Cell* cells);
 
-	/**
-	 * Send and receive a converted particle Cell to all neighboring processes in a direction
-	 * @param com_d specific direction
-	 * @param send_pl converted List of particles to be send
-	 * @param recv_pl empty converted List of particles where the received particles will be stored
-	 */
-	void pl_send_l(int* length, int recv_rank, int tag);
-	void pl_send(real* to_send, int recv_rank, int length, int tag);
-	void pl_recv_l(int* length, int send_rank, int tag);
-	void pl_recv(real* recv, int length, int send_rank, int tag);
+	void uncode_p(real* code, Particle* p);
+
 	void delete_pl(int* icr_start, int* icr_stop, Cell* cells);
 
 	int get_num_p(int* icr_start, int* icr_stop, Cell* cells);
