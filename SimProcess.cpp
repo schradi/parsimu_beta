@@ -150,14 +150,19 @@ void SimProcess::compA(Cell* cells){
 	int nc[DIM];
 	Cell* ci;
 	Cell* cj;
-	real F[DIM];
+	real space;
 	Particle* p_own;
 	Particle* p_oth;
+	int fa[10];
+	int fa_c=0;
+	real F;
 	for (ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
 		for (ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
 			// for each Cell
 			ci=&cells[local_index(ic)];
 			for(ParticleList* pi=ci->pl; pi!=NULL; pi=pi->next){
+				F[0]=0;
+				F[1]=0;
 				// for each Particle within this Cell
 				for (nc[1]=ic[1]-1;nc[1]<=ic[1]+1;nc[1]++){
 					for (nc[0]=ic[0]-1;nc[0]<=ic[0]+1;nc[0]++){
@@ -167,20 +172,23 @@ void SimProcess::compA(Cell* cells){
 							if(pj!=pi){
 								p_own=pi->p;
 								p_oth=pj->p;
-								F[0]=p_own->X[0]-p_oth->X[0];
-								F[1]=p_own->X[1]-p_oth->X[1];
-								force(F);
-								for(int d=0; d<DIM; d++){
-									p_own->a_old[d]=p_own->a[d];
-									p_own->a[d]=F[d]/p_own->m;
-								}
+								space[0]=p_own->X[0]-p_oth->X[0];
+								space[1]=p_own->X[1]-p_oth->X[1];
+								force(space);
+								F[0]+=space[0];
+								F[1]+=space[1];
 							}
 						}
 					}
 				}
+				for(int d=0; d<DIM; d++){
+					pi->p->a_old[d]=pi->p->a[d];
+					pi->p->a[d]=F[d]/pi->p->m;
+				}
 			}
 		}
 	}
+
 }
 
 void SimProcess::compV(Cell* cells){

@@ -47,12 +47,20 @@ int main(int argc, char* argv[]) {
 
 	SimProcess* sim_p;
 	sim_p= new SimProcess();
+	sim_p->errt=0;
 	int numc=(sim_p->local_nc[0]+2)*(sim_p->local_nc[1]+2);
 	Cell cells[numc];
 	sim_p->create_cells(cells);
 	MPI::COMM_WORLD.Barrier();
 	sim_p->num_part=c_nump;
 	sim_p->initData(cells);
+
+	std::fstream ljerr;
+	ljerr.open("ljerr.csv", std::ios::out | std::ios::trunc);
+	for(real c=0.82;c<1.2;c+=.001){
+		ljerr<<c<<","<<sim_p->lj_force(c)<<"\n";
+	}
+	ljerr.close();
 
 	sim_p->output(cells, 0);
 	MPI::COMM_WORLD.Barrier();

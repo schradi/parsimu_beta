@@ -26,6 +26,7 @@
  */
 class SimProcess{
 public:
+	int errt;
 	bool aborted;
 	real cell_size[DIM];			/**< +Width of each cell*/
 	real delta_t;
