@@ -16,7 +16,7 @@
 #define DET_DOKU false
 
 #define DIM 2 /**< Dimension of the Simulation*/
-#define COM_SZE 8
+#define COM_SZE 10
 #define DOKU 1
 
 //Used Datatype

@@ -104,7 +104,7 @@ public:
 	 * @param p_X Position of which the responsible process in needed
 	 * @return rank of the process responsible for the Position p_X
 	 */
-	void force(real* p_X);
+	void force_epot(real* p_X, real* F, real* Epot);
 
 	real lj_force(real r);
 

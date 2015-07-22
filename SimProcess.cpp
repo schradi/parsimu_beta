@@ -48,32 +48,12 @@ void SimProcess::timeIntegration(Cell* cells){
 			output(cells, (int) t_step_nr/output_resolution);
 			if(rank==0) timerList->calc_avg_time("output", t_start);
 		}
-//		compE(cells);
 //		if(rank == 0) std::cout<<"t_step_nr: "<<100*t_step_nr<<" anz: "<<(int) (t_end/delta_t)<<"\n";
 		if(rank == 0) if((t_step_nr*100%(int)(t_end/delta_t))==0) std::cout<<"Process: "<<(int)((t/t_end)*100) + 1 <<"%\n";
 		t+=delta_t;
 		t_step_nr++;
 	}
 }
-
-//void compE(Cell* cells){
-//	real Ekin=0;
-//	real Epot=0;
-//	int ic[DIM];
-//	Cell* c;
-//	for (ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
-//		for (ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
-//			// for each Cell
-//			c=&cells[local_index(ic)];
-//			for(ParticleList* pi=c->pl; pi!=NULL; pi=pi->next){
-//				// for each Particle within this Cell
-//				Ekin+=0.5*pi->p->m*(pow(pi->p->V[0],2)+pow(pi->p->V[1], 2));
-//
-//				Epot+=epsilon*(pow(1.1224620*sigma/));
-//			}
-//		}
-//	}
-//}
 
 void SimProcess::output(Cell* cells, int outp_nr){
 
@@ -122,16 +102,24 @@ void SimProcess::output(Cell* cells, int outp_nr){
 		strcat(outputfile_new, cline_nr);
 		file.open(outputfile_new, std::ios::out|std::ios::trunc);
 //		file<<"x coord, my coord, x velocity, y velocity\n";
-		file<<"0,0,0,0,0,0,0,0\n";
-		file<<"0,0,"<<global_size[0]<<",0,0,0,0,0\n";
-		file<<"0,0,0,0,0,"<<global_size[1]<<",0,0\n";
-		file<<"0,0,"<<global_size[0]<<",0,0,"<<global_size[1]<<",0,0\n";
+		file<<"0,0,0,0,0,0,0,0,0\n";
+		file<<"0,0,"<<global_size[0]<<",0,0,0,0,0,0\n";
+		file<<"0,0,0,0,0,"<<global_size[1]<<",0,0,0\n";
+		file<<"0,0,"<<global_size[0]<<",0,0,"<<global_size[1]<<",0,0,0\n";
+		real Ekin_ges=0;
+		real Epot_ges=0;
 		for(pos=0; pos<recv_pl_al*COM_SZE; pos+=COM_SZE){
+
 			for(int i=0; i<COM_SZE; i++){
 				file<<recv_pl[pos+i]<<",\t";
 			}
-			file<<recv_pl[pos+7]<<"\n";
+			Epot_ges+=recv_pl[pos+8];
+			Ekin_ges+=recv_pl[pos+9];
+			file<<"\n";
 		}
+		file.close();
+		file.open("data/energy.csv", std::ios::out|std::ios::app);
+		file<<t<<","<<Ekin_ges+Epot_ges<<","<<Epot_ges<<","<<Ekin_ges<<"\n";
 		file.close();
 	}else{
 		// Sending number of Particles
@@ -150,17 +138,19 @@ void SimProcess::compA(Cell* cells){
 	int nc[DIM];
 	Cell* ci;
 	Cell* cj;
-	real space;
+	real space[DIM];
+	real E;
 	Particle* p_own;
 	Particle* p_oth;
 	int fa[10];
 	int fa_c=0;
-	real F;
+	real F[DIM];
 	for (ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
 		for (ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
 			// for each Cell
 			ci=&cells[local_index(ic)];
 			for(ParticleList* pi=ci->pl; pi!=NULL; pi=pi->next){
+				E=0;
 				F[0]=0;
 				F[1]=0;
 				// for each Particle within this Cell
@@ -174,9 +164,7 @@ void SimProcess::compA(Cell* cells){
 								p_oth=pj->p;
 								space[0]=p_own->X[0]-p_oth->X[0];
 								space[1]=p_own->X[1]-p_oth->X[1];
-								force(space);
-								F[0]+=space[0];
-								F[1]+=space[1];
+								force_epot(space, F, &E);
 							}
 						}
 					}
@@ -185,6 +173,7 @@ void SimProcess::compA(Cell* cells){
 					pi->p->a_old[d]=pi->p->a[d];
 					pi->p->a[d]=F[d]/pi->p->m;
 				}
+				pi->p->Epot=E*0.5;
 			}
 		}
 	}
@@ -194,15 +183,19 @@ void SimProcess::compA(Cell* cells){
 void SimProcess::compV(Cell* cells){
 	Cell* c;
 	int ic[DIM];
+	real V_ges;
 	for (ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
 		for (ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
 			// for each Cell
 			c=&cells[local_index(ic)];
 			for(ParticleList* pi=c->pl; pi!=NULL; pi=pi->next){
+				V_ges=0;
 				// for each Particle within this Cell
 				for(int d=0; d<DIM; d++){
 					pi->p->V[d]+=0.5*(pi->p->a[d]+pi->p->a_old[d])*delta_t;
+					V_ges=pow(pi->p->V[d],2);
 				}
+				pi->p->Ekin=0.5*pi->p->m*V_ges;
 			}
 		}
 	}
@@ -367,10 +360,6 @@ SimProcess::SimProcess(){
 		if(Vvar==0) std::cout<< "Vvar was not declared\n";
 
 		file.close();
-		real dist[DIM];
-		dist[0]=r_cut;
-		dist[1]=0;
-		force(dist);
 		// Set important global variables
 		for(int d=0; d<DIM; d++){
 			global_np[d]= pow(np,(double) 1/DIM);
@@ -542,12 +531,17 @@ void SimProcess::create_cells(Cell* cells){
 	}
 }
 
-void SimProcess::force(real* X){
+void SimProcess::force_epot(real* X, real* F, real* Epot){
 	real r=0; /**< length*/
 	for (int d=0;d<DIM;d++){
 		r+=X[d]*X[d];
 	}
 	r=sqrt(r);
+
+	//calculate potential energy
+	*Epot+=4*epsilon*(pow(sigma/r, 12)-pow(sigma/r, 6));
+
+	//calculate force
 	if(r<=r_cut){
 		// Normalization of X
 		for (int d=0; d<DIM; d++){
@@ -561,6 +555,8 @@ void SimProcess::force(real* X){
 		X[0]=0;
 		X[1]=0;
 	}
+	F[0]+=X[0];
+	F[1]+=X[1];
 }
 
 real SimProcess::lj_force(real r){
@@ -713,6 +709,8 @@ void SimProcess::uncode_p(real* code, Particle* p){
 	p->X[1]=code[5];
 	p->V[1]=code[6];
 	p->a_old[1]=code[7];
+	p->Epot=code[8];
+	p->Ekin=code[9];
 }
 
 void SimProcess::code_range(real* send_pl, int* icr_start, int* icr_stop, Cell* cells){
@@ -737,6 +735,8 @@ void SimProcess::code_p(Particle* p, real* code){
 	code[5]=p->X[1];
 	code[6]=p->V[1];
 	code[7]=p->a_old[1];
+	code[8]=p->Epot;
+	code[9]=p->Ekin;
 }
 
 void SimProcess::create_particles(ParticleList* new_pl, real* r_start, real* r_stop, real resolution, real* p_V){

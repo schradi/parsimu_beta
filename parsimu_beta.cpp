@@ -32,6 +32,9 @@ int main(int argc, char* argv[]) {
 		c_nump=0;
 	}
 	MPI::Init (argc, argv);
+	std::fstream del;
+	del.open("data/energy.csv", std::ios::trunc);
+	del.close();
 
 	// calculate global_np
 	int global_np[DIM];
@@ -71,17 +74,8 @@ int main(int argc, char* argv[]) {
 	if(sim_p->rank==0){
 		std::cout<<"DONE\n";
 		std::fstream file;
-//			if(npart==sqrt(c_start)){
-//				file.open("times.csv", std::ios::out | std::ios::trunc);
-//				file<<"Number Particles";
-//				for(TimerList* ti=sim_p->timerList; ti!=NULL; ti=ti->next){
-//					file<<","<<ti->t->tag;
-//				}
-//				file<<"\n";
-//			}else{
 		file.open("times.csv", std::ios::out | std::ios::app);
-//			}
-			file<<c_nump*c_nump;
+		file<<c_nump*c_nump;
 		for(TimerList* ti=sim_p->timerList; ti!=NULL; ti=ti->next){
 			file<<" "<<ti->t->timer;
 			std::cout<<ti->t->tag<<" ";

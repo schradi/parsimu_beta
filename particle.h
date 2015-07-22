@@ -18,6 +18,8 @@ public:
 	real V[DIM];		/**< Velocity of the particle*/
 	real a[DIM];		/**< Force-Vector of the particle in the next timestep*/
 	real a_old[DIM];
+	real Epot;
+	real Ekin;
 	Particle(){
 		id=-1;
 		m=1;
@@ -26,6 +28,8 @@ public:
 			V[d]=0;
 			a[d]=0;
 			a_old[d]=0;
+			Ekin=0;
+			Epot=0;
 		}
 	}
 };
