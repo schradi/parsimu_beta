@@ -20,7 +20,6 @@
 #include "SimProcess.h"
 #include "timers.h"
 
-
 int main(int argc, char* argv[]) {
 
 
@@ -32,6 +31,8 @@ int main(int argc, char* argv[]) {
 		c_nump=0;
 	}
 	MPI::Init (argc, argv);
+	int ic[DIM];
+
 	std::fstream del;
 	del.open("data/energy.csv", std::ios::trunc);
 	del.close();
@@ -53,38 +54,41 @@ int main(int argc, char* argv[]) {
 	sim_p->errt=0;
 	int numc=(sim_p->local_nc[0]+2)*(sim_p->local_nc[1]+2);
 	Cell cells[numc];
+	std::cout<<"create_cells\n";
 	sim_p->create_cells(cells);
 	MPI::COMM_WORLD.Barrier();
-	sim_p->num_part=c_nump;
-	sim_p->initData(cells);
-
-	std::fstream ljerr;
-	ljerr.open("ljerr.csv", std::ios::out | std::ios::trunc);
-	for(real c=0.82;c<1.2;c+=.001){
-		ljerr<<c<<","<<sim_p->lj_force(c)<<"\n";
+	if(sim_p->rank==1){
+	for(ic[1]=sim_p->ic_start[1]-1; ic[1]<= sim_p->ic_stop[1]+1; ic[1]++){
+		for(ic[0]=sim_p->ic_start[0]-1; ic[0]<= sim_p->ic_stop[0]+1; ic[0]++){
+			std::cout<<"start(["<<ic[0]<<","<<ic[1]<<"]) = ("<<cells[sim_p->local_index(ic)].start[0]<<","<<cells[sim_p->local_index(ic)].start[1]<<")\n";
+		}
 	}
-	ljerr.close();
+	}
+
+	sim_p->num_part=c_nump;
+	std::cout<<"initData\n";
+	sim_p->initData(cells);
 
 	sim_p->output(cells, 0);
 	MPI::COMM_WORLD.Barrier();
-	if(global_np[0]!=1) sim_p->communicate(cells);
-
-	sim_p->timeIntegration(cells);
+	sim_p->communicate(cells);
 	MPI::COMM_WORLD.Barrier();
-	if(sim_p->rank==0){
-		std::cout<<"DONE\n";
-		std::fstream file;
-		file.open("times.csv", std::ios::out | std::ios::app);
-		file<<c_nump*c_nump;
-		for(TimerList* ti=sim_p->timerList; ti!=NULL; ti=ti->next){
-			file<<" "<<ti->t->timer;
-			std::cout<<ti->t->tag<<" ";
-		}
-		file<<"\n";
-		std::cout<<"\n";
-		file.close();
-	}
-
+	sim_p->timeIntegration(cells);
+//	MPI::COMM_WORLD.Barrier();
+//	if(sim_p->rank==0){
+//		std::cout<<"DONE\n";
+//		std::fstream file;
+//		file.open("times.csv", std::ios::out | std::ios::app);
+//		file<<c_nump*c_nump;
+//		for(TimerList* ti=sim_p->timerList; ti!=NULL; ti=ti->next){
+//			file<<" "<<ti->t->timer;
+//			std::cout<<ti->t->tag<<" ";
+//		}
+//		file<<"\n";
+//		std::cout<<"\n";
+//		file.close();
+//	}
+//
 	MPI::Finalize();
 	return 0;
 }

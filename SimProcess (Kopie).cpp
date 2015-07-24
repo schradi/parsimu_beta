@@ -654,6 +654,10 @@ void SimProcess::communicate(Cell* cells){
 		}
 	}
 
+//	int icr_start[DIM]={ic_start[0]-1, ic_start[1]-1};
+//	int icr_stop[DIM]={ic_stop[0]+1, ic_stop[1]+1};
+//	num_part=get_num_p(icr_start, icr_stop, cells);
+
 	// For all cells: include adding in PL
 	adding_to_pl(cells);
 
@@ -665,10 +669,6 @@ void SimProcess::communicate(Cell* cells){
 	MPI::COMM_WORLD.Barrier();
 	//Status of each Process:
 	if(rank==0){
-		int icr_start[DIM]={ic_start[0]-1, ic_start[1]-1};
-		int icr_stop[DIM]={ic_stop[0]+1, ic_stop[1]+1};
-		std::cout<<"Number of Particles in important Center: "<<get_num_p(ic_start, ic_stop, cells)<<"\n";
-		std::cout<<"Number of Particles all over: "<<get_num_p(icr_start, icr_stop, cells)<<"\n";
 		for(ic[1]=ic_start[1]-1; ic[1]<=ic_stop[1]+1; ic[1]++){
 			for(ic[0]=ic_start[0]-1; ic[0]<=ic_stop[0]+1; ic[0]++){
 				nump=0;
@@ -732,7 +732,6 @@ void SimProcess::communicate(Cell* cells){
 
 void SimProcess::communicate(int com_d, Cell* cells){
 	MPI::Request request;
-	MPI::Status status;
 
 	int oth_d;
 	if(com_d==0){
@@ -756,50 +755,42 @@ void SimProcess::communicate(int com_d, Cell* cells){
 
 	// sending lower, receiving upper
 	int send_pl_lower_length = get_num_p(icr_lower_start, icr_lower_stop, cells);
-//	std::cout<<"calc length: "<<send_pl_lower_length<<"\n";
 	int recv_pl_upper_length;
 	real send_pl_lower[send_pl_lower_length*COM_SZE];
 	code_range(send_pl_lower, icr_lower_start, icr_lower_stop, cells);
-//	std::cout<<"P"<<rank<<" sends "<<send_pl_lower_length<<" to lower"<<com_d<<" P"<<neigh_lower[com_d]<<"\n";
 	request = MPI::COMM_WORLD.Isend(&send_pl_lower_length, 1, MPI::INT, neigh_lower[com_d], 1);
 	delete_pl(icr_lower_start, icr_lower_stop, cells);
-	MPI::COMM_WORLD.Recv(&recv_pl_upper_length, 1, MPI::INT, neigh_upper[com_d], 1, status);
-	request.Wait(status);
-//	std::cout<<"P"<<rank<<" received "<<recv_pl_upper_length<<" from upper"<<com_d<<" P"<<neigh_upper[com_d]<<"\n";
+	MPI::COMM_WORLD.Recv(&recv_pl_upper_length, 1, MPI::INT, neigh_upper[com_d], 1);
+	request.Wait();
 	real recv_pl_upper[recv_pl_upper_length*COM_SZE];
 	request = MPI::COMM_WORLD.Isend(&send_pl_lower, send_pl_lower_length*COM_SZE, MPI::DOUBLE, neigh_lower[com_d], 2);
-	MPI::COMM_WORLD.Recv(&recv_pl_upper, recv_pl_upper_length*COM_SZE, MPI::DOUBLE, neigh_upper[com_d], 2, status);
-	request.Wait(status);
+	MPI::COMM_WORLD.Recv(&recv_pl_upper, recv_pl_upper_length*COM_SZE, MPI::DOUBLE, neigh_upper[com_d], 2);
+	request.Wait();
 	if(neigh_upper[com_d]<rank){
-		std::cout<<"P"<<rank<<" has boder in "<<com_d<<" upper direction\n";
 		pb_corr=1;
 	}else{
 		pb_corr=0;
 	}
-	uncode_in_range(recv_pl_upper, icr_upper_start, icr_upper_stop, recv_pl_upper_length, cells, pb_corr, com_d);
+	uncode_in_range(recv_pl_upper, icr_upper_start, icr_upper_stop, recv_pl_upper_length, cells, pb_corr);
 
 	// sending upper, receiving lower
 	int send_pl_upper_length = get_num_p(icr_upper_start, icr_upper_stop, cells);
 	int recv_pl_lower_length;
 	real send_pl_upper[send_pl_upper_length*COM_SZE];
 	code_range(send_pl_upper, icr_upper_start, icr_upper_stop, cells);
-//	std::cout<<"P"<<rank<<" sends "<<send_pl_upper_length<<" to lupper"<<com_d<<" P"<<neigh_upper[com_d]<<"\n";
 	request = MPI::COMM_WORLD.Isend(&send_pl_upper_length, 1, MPI::INT, neigh_upper[com_d], 3);
-	MPI::COMM_WORLD.Recv(&recv_pl_lower_length, 1, MPI::INT, neigh_lower[com_d], 3, status);
-	request.Wait(status);
-//	std::cout<<"P"<<rank<<" received "<<recv_pl_lower_length<<" from lower"<<com_d<<" P"<<neigh_lower[com_d]<<"\n";
+	MPI::COMM_WORLD.Recv(&recv_pl_lower_length, 1, MPI::INT, neigh_lower[com_d], 3);
+	request.Wait();
 	real recv_pl_lower[recv_pl_lower_length*COM_SZE];
 	request = MPI::COMM_WORLD.Isend(&send_pl_upper, send_pl_upper_length*COM_SZE, MPI::DOUBLE, neigh_upper[com_d], 4);
-	MPI::COMM_WORLD.Recv(&recv_pl_lower, recv_pl_lower_length*COM_SZE, MPI::DOUBLE, neigh_lower[com_d], 4, status);
-	request.Wait(status);
+	MPI::COMM_WORLD.Recv(&recv_pl_lower, recv_pl_lower_length*COM_SZE, MPI::DOUBLE, neigh_lower[com_d], 4);
+	request.Wait();
 	if(neigh_lower[com_d]>rank){
-		std::cout<<"P"<<rank<<" has boder in "<<com_d<<" lower direction\n";
 		pb_corr=-1;
 	}else{
-
 		pb_corr=0;
 	}
-	uncode_in_range(recv_pl_lower, icr_lower_start, icr_lower_stop, recv_pl_lower_length, cells, pb_corr, com_d);
+	uncode_in_range(recv_pl_lower, icr_lower_start, icr_lower_stop, recv_pl_lower_length, cells, pb_corr);
 }
 
 void SimProcess::delete_pl(int* icr_start, int* icr_stop, Cell* cells){
@@ -827,64 +818,37 @@ int SimProcess::get_num_p(int* icr_start, int* icr_stop, Cell* cells){
 
 
 
-void SimProcess::uncode_in_range(real* recv_pl, int* icr_start, int*icr_stop, int length_recv, Cell* cells, int pb_corr, int com_d){
+void SimProcess::uncode_in_range(real* recv_pl, int* icr_start, int*icr_stop, int length_recv, Cell* cells, int pb_corr){
 	// Eingabe: Codierte Partikel die von einem anderen Process geschickt wurden. Aufgrund der Periodischen Randbedingungen kann es deshalb sein, dass die Position der einzutragenden Position entspricht.
 	// Ausgabe: Eingetragene Partikel in den Zellen mit richtiger Position
 	// Partiklposition muss umgeschrieben werden wenn
 	// bei einem Process:
+
 	int pos=0;
 	Particle* p;
 	int ic[DIM];
 	while(pos<length_recv*COM_SZE){
 		p=new Particle();
 		uncode_p(&recv_pl[pos], p);
-		if(rank==0) std::cout<<"P"<<rank<<" got Particle at X["<<com_d<<"]=("<<p->X[0]<<"/"<<p->X[1]<<")";
+
 		// Periodic Boundaries
-		if(pb_corr!=0 && com_d!=-1){
-			if(pb_corr==-1){
-				if(rank==0) std::cout<<" in lower direction";
-			}else{
-				if(rank==0) std::cout<<" in upper direction";
+		if(pb_corr!=0){
+			for(int d=0; d<DIM; d++){
+				p->X[d]+=pb_corr*local_size[d];
 			}
-			if(rank==0) std::cout<<" changed to ";
-			p->X[com_d]+=pb_corr*global_size[com_d];
-			if(rank==0) std::cout<<p->X[com_d];
 		}
-		if(rank==0) std::cout<<" and inserted into ";
-//		if(com_d!=-1){
-//			ic[com_d]=icr_start[com_d];
-//			ic[1-com_d]=icr_start[1-com_d];
-//			while(p->X[com_d]<cells[local_index(ic)].start[com_d]){
-//				ic[com_d]--;
-//				if(ic[com_d]<icr_start[com_d]) std::cout<<"P"<<rank<<" com_d="<<com_d<<", ic[com_d]-- \n";
-//			}
-//			while(p->X[com_d]>=cells[local_index(ic)].start[com_d]+cell_size[com_d]){
-//				ic[com_d]++;
-//				if(ic[com_d]>icr_stop[com_d]) std::cout<<"P"<<rank<<" com_d="<<com_d<<", ic[com_d]++ \n";
-//			}
-//
-//		}else{
-			ic[0]=icr_start[0];
-			ic[1]=icr_start[1];
-			std::cout<<"P"<<rank<<" trying out ICs\n";
-			while(p->X[0]<cells[local_index(ic)].start[0]){
-				ic[0]--;
-				if(ic[0]<icr_start[0]) std::cout<<"P"<<rank<<" com_d=-1, ic[0]-- \n";
-			}
-			while(p->X[0]>=cells[local_index(ic)].start[0]+cell_size[0]){
-				ic[0]++;
-				if(ic[0]>icr_stop[0]) std::cout<<"P"<<rank<<" com_d=-1, ic[0]++ \n";
-			}
-			while(p->X[1]<cells[local_index(ic)].start[1]){
-				ic[1]--;
-				if(ic[1]>icr_start[1]) std::cout<<"P"<<rank<<" com_d=-1, ic[1]-- \n";
-			}
-			while(p->X[1]>=cells[local_index(ic)].start[1]+cell_size[1]){
-				ic[1]++;
-				if(ic[1]>icr_stop[1]) std::cout<<"P"<<rank<<" com_d=-1, ic[1]++ \n";
-			}
-//		}
-		if(rank==0) std::cout<<" Cell ["<<ic[0]<<","<<ic[1]<<"]\n";
+
+		ic[0]=icr_start[0];
+		ic[1]=icr_start[1];
+		while(p->X[0]>=cells[local_index(ic)].start[0]){
+			ic[0]++;
+		}
+		ic[0]--;
+		while(p->X[1]>=cells[local_index(ic)].start[1]){
+			ic[1]++;
+		}
+		ic[1]-=1;
+
 		cells[local_index(ic)].insertParticle(p);
 		if(p->X[0]>start[0] && p->X[0]<start[0]+local_size[0] &&
 			p->X[1]>start[1] && p->X[1]<start[1]+local_size[1]){
@@ -907,7 +871,6 @@ void SimProcess::uncode_p(real* code, Particle* p){
 	p->a_old[1]=code[7];
 	p->Epot=code[8];
 	p->Ekin=code[9];
-//	std::cout<<"P"<<rank<<" received ("<<p->X[0]<<"/"<<p->X[1]<<")\n";
 }
 
 void SimProcess::code_range(real* send_pl, int* icr_start, int* icr_stop, Cell* cells){
@@ -1188,7 +1151,7 @@ void SimProcess::initData(Cell* cells){
 			code_p(pi->p, &cod_pl[i]);
 			i+=COM_SZE;
 		}
-		uncode_in_range(cod_pl, icr_start, icr_stop, num_part, cells);
+		uncode_in_range(cod_pl, icr_start, icr_stop, num_part, cells, 0);
 	}else{
 		// Receiving number of Particles
 		int recv_l;
@@ -1198,7 +1161,7 @@ void SimProcess::initData(Cell* cells){
 		// Receiving Particles as Array of real
 		real cod_pl[COM_SZE*num_part];
 		MPI::COMM_WORLD.Recv(cod_pl, COM_SZE*num_part, MPI::DOUBLE, 0, global_nc[0]*global_nc[1]+rank);
-		uncode_in_range(cod_pl, icr_start, icr_stop, num_part, cells);
+		uncode_in_range(cod_pl, icr_start, icr_stop, num_part, cells, 0);
 	}
 	// sort particles in Cells
 //	ParticleList* tmp;

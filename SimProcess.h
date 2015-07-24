@@ -26,6 +26,7 @@
  */
 class SimProcess{
 public:
+	real	lj_force_r_cut;
 	int errt;
 	bool aborted;
 	real cell_size[DIM];			/**< +Width of each cell*/
@@ -41,7 +42,8 @@ public:
 	int  neigh_lower[DIM];			/**< +Rank of the lower neighboring processes in each direction*/
 	int	 neigh_upper[DIM];			/**< +Rank of the lower neighboring processes in each direction*/
 	int  global_np[DIM];			/**< +Number of running Processes*/
-	int  num_part;					/**< +Number of particles within this process*/
+	int  num_part;	/**< +Number of particles within this process*/
+	int	 num_ghost_part;
 	int	 rank;						/**< +Rank of this Process*/
 	real r_cut;						/**< +cutting-radius for short-range forces*/
 	real start[DIM];				/**< +Starting-Point of this Process (left down point)*/
@@ -97,14 +99,12 @@ public:
 	 */
 	void compX(Cell* cells);
 
-
-
 	/**
 	 * Calculates the force caused by the Lennard-Jones-Potential in a distance of p_X
 	 * @param p_X Position of which the responsible process in needed
 	 * @return rank of the process responsible for the Position p_X
 	 */
-	void force_epot(real* p_X, real* F, real* Epot);
+	void force(real* p_X, real* F);
 
 	real lj_force(real r);
 
@@ -195,7 +195,11 @@ public:
 	/**
 	* Convert an array of double into Particles and sort them in cells in a specified range
 	*/
-	void uncode_in_range(real* recv_pl, int* icr_start, int*icr_stop, int length_recv, Cell* cells);
+	void uncode_in_range(real* recv_pl, int* icr_start, int*icr_stop, int length_recv, Cell* cells, int pb_corr, int com_d);
+
+	void uncode_in_range(real* recv_pl, int* icr_start, int*icr_stop, int length_recv, Cell* cells){
+		uncode_in_range(recv_pl, icr_start, icr_stop, length_recv, cells, 0, -1);
+	};
 
 	void uncode_p(real* code, Particle* p);
 
