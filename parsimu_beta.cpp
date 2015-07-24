@@ -31,7 +31,6 @@ int main(int argc, char* argv[]) {
 		c_nump=0;
 	}
 	MPI::Init (argc, argv);
-	int ic[DIM];
 
 	std::fstream del;
 	del.open("data/energy.csv", std::ios::trunc);
@@ -54,19 +53,12 @@ int main(int argc, char* argv[]) {
 	sim_p->errt=0;
 	int numc=(sim_p->local_nc[0]+2)*(sim_p->local_nc[1]+2);
 	Cell cells[numc];
-	std::cout<<"create_cells\n";
+	if(sim_p->rank==0) std::cout<<"create_cells\n";
 	sim_p->create_cells(cells);
 	MPI::COMM_WORLD.Barrier();
-	if(sim_p->rank==1){
-	for(ic[1]=sim_p->ic_start[1]-1; ic[1]<= sim_p->ic_stop[1]+1; ic[1]++){
-		for(ic[0]=sim_p->ic_start[0]-1; ic[0]<= sim_p->ic_stop[0]+1; ic[0]++){
-			std::cout<<"start(["<<ic[0]<<","<<ic[1]<<"]) = ("<<cells[sim_p->local_index(ic)].start[0]<<","<<cells[sim_p->local_index(ic)].start[1]<<")\n";
-		}
-	}
-	}
 
 	sim_p->num_part=c_nump;
-	std::cout<<"initData\n";
+	if(sim_p->rank==0) std::cout<<"initData\n";
 	sim_p->initData(cells);
 
 	sim_p->output(cells, 0);

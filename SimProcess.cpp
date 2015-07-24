@@ -13,10 +13,7 @@ void SimProcess::timeIntegration(Cell* cells){
 	if(DOKU>=0) if(rank==0) std::cout<<"-----------------------\n- starting Simulation -\n-----------------------\n";
 	clock_t t_start;
 	compA(cells);
-	int gnp_real;
 	while (t<t_end && !aborted){
-		gnp_real=get_num_p(ic_start, ic_stop, cells);
-		std::cout<<"P"<<rank<<", T"<<t_step_nr<<": Nr part thougth: "<<num_part<<", Nr part real: "<<gnp_real<<"\n";
 		MPI::COMM_WORLD.Barrier();
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compX\n";
 		if(rank==0) t_start=clock();
@@ -59,20 +56,7 @@ void SimProcess::timeIntegration(Cell* cells){
 void SimProcess::output(Cell* cells, int outp_nr){
 	MPI::COMM_WORLD.Barrier();
 	int ic[DIM];
-	int nump;
-	std::cout<<"\n--output--\n----------\n";
-	for(ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
-		for(ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
-			nump=0;
-			for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-				nump++;
-			}
-			std::cout<<"P"<<rank<<" - Cell["<<ic[0]<<","<<ic[1]<<"] contains "<<nump<<" Particles\n";
-			for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-				std::cout<<"\t("<<pi->p->X[0]<<","<<pi->p->X[1]<<")\n";
-			}
-		}
-	}
+
 //	// Important: just particles stored in pl are considered
 	num_part=get_num_p(ic_start, ic_stop, cells);
 
@@ -573,78 +557,7 @@ real SimProcess::lj_force(real r){
 
 void SimProcess::communicate(Cell* cells){
 	int ic[DIM];
-	if(rank==0) std::cout<<"\n---------------\n- communicate -\n---------------\n";
-	int nump=0;
-//	//Status of each Process:
-//	if(rank==0){
-//		for(ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
-//			for(ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
-//				nump=0;
-//				for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-//					nump++;
-//				}
-//				std::cout<<"P"<<rank<<" - Cell["<<ic[0]<<","<<ic[1]<<"] contains "<<nump<<" Particles\n";
-//				for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-//					std::cout<<"\t("<<pi->p->X[0]<<","<<pi->p->X[1]<<")\n";
-//				}
-//			}
-//		}
-//	}
-//	MPI::COMM_WORLD.Barrier();
-//	if(rank==1){
-//		for(ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
-//			for(ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
-//				nump=0;
-//				for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-//					nump++;
-//				}
-//				std::cout<<"P"<<rank<<" - Cell["<<ic[0]<<","<<ic[1]<<"] contains "<<nump<<" Particles\n";
-//				for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-//					std::cout<<"\t("<<pi->p->X[0]<<","<<pi->p->X[1]<<")\n";
-//				}
-//			}
-//		}
-//	}
-//	MPI::COMM_WORLD.Barrier();
-//	if(rank==2){
-//		for(ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
-//			for(ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
-//				nump=0;
-//				for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-//					nump++;
-//				}
-//				std::cout<<"P"<<rank<<" - Cell["<<ic[0]<<","<<ic[1]<<"] contains "<<nump<<" Particles\n";
-//				for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-//					std::cout<<"\t("<<pi->p->X[0]<<","<<pi->p->X[1]<<")\n";
-//				}
-//			}
-//		}
-//	}
-//	MPI::COMM_WORLD.Barrier();
-//	if(rank==3){
-//		for(ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
-//			for(ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
-//				nump=0;
-//				for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-//					nump++;
-//				}
-//				std::cout<<"P"<<rank<<" - Cell["<<ic[0]<<","<<ic[1]<<"] contains "<<nump<<" Particles\n";
-//				for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-//					std::cout<<"\t("<<pi->p->X[0]<<","<<pi->p->X[1]<<")\n";
-//				}
-//			}
-//		}
-//	}
-//	MPI::COMM_WORLD.Barrier();
-//
-//
-//
-//	int gnp_real=get_num_p(ic_start, ic_stop, cells);
-//	std::cout<<"P"<<rank<<": Nr part thougth: "<<num_part<<", Nr part real: "<<gnp_real<<", Nr part ghost: "<<num_ghost_part<<"\n";
-//
-//
 	// For all surrounding Ghost-Cells: delete Pl
-
 	for(ic[1]=ic_start[1]-1; ic[1]<=ic_stop[1]+1; ic[1]++){
 		for(ic[0]=ic_start[0]-1; ic[0]<=ic_stop[0]+1; ic[0]++){
 			if(ic[1]==ic_start[1]-1 || ic[0]==ic_start[0]-1 ||
@@ -660,74 +573,6 @@ void SimProcess::communicate(Cell* cells){
 	for(int d=0; d<DIM; d++){
 		communicate(d, cells);
 	}
-
-	std::cout<<"AFTER: ---------\n";
-	MPI::COMM_WORLD.Barrier();
-	//Status of each Process:
-	if(rank==0){
-		int icr_start[DIM]={ic_start[0]-1, ic_start[1]-1};
-		int icr_stop[DIM]={ic_stop[0]+1, ic_stop[1]+1};
-		std::cout<<"Number of Particles in important Center: "<<get_num_p(ic_start, ic_stop, cells)<<"\n";
-		std::cout<<"Number of Particles all over: "<<get_num_p(icr_start, icr_stop, cells)<<"\n";
-		for(ic[1]=ic_start[1]-1; ic[1]<=ic_stop[1]+1; ic[1]++){
-			for(ic[0]=ic_start[0]-1; ic[0]<=ic_stop[0]+1; ic[0]++){
-				nump=0;
-				for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-					nump++;
-				}
-				std::cout<<"P"<<rank<<" - Cell["<<ic[0]<<","<<ic[1]<<"] contains "<<nump<<" Particles\n";
-				for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-					std::cout<<"\t("<<pi->p->X[0]<<","<<pi->p->X[1]<<")\n";
-				}
-			}
-		}
-	}
-	MPI::COMM_WORLD.Barrier();
-	if(rank==1){
-		for(ic[1]=ic_start[1]-1; ic[1]<=ic_stop[1]+1; ic[1]++){
-			for(ic[0]=ic_start[0]-1; ic[0]<=ic_stop[0]+1; ic[0]++){
-				nump=0;
-				for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-					nump++;
-				}
-				std::cout<<"P"<<rank<<" - Cell["<<ic[0]<<","<<ic[1]<<"] contains "<<nump<<" Particles\n";
-				for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-					std::cout<<"\t("<<pi->p->X[0]<<","<<pi->p->X[1]<<")\n";
-				}
-			}
-		}
-	}
-	MPI::COMM_WORLD.Barrier();
-	if(rank==2){
-		for(ic[1]=ic_start[1]-1; ic[1]<=ic_stop[1]+1; ic[1]++){
-			for(ic[0]=ic_start[0]-1; ic[0]<=ic_stop[0]+1; ic[0]++){
-				nump=0;
-				for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-					nump++;
-				}
-				std::cout<<"P"<<rank<<" - Cell["<<ic[0]<<","<<ic[1]<<"] contains "<<nump<<" Particles\n";
-				for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-					std::cout<<"\t("<<pi->p->X[0]<<","<<pi->p->X[1]<<")\n";
-				}
-			}
-		}
-	}
-	MPI::COMM_WORLD.Barrier();
-	if(rank==3){
-		for(ic[1]=ic_start[1]-1; ic[1]<=ic_stop[1]+1; ic[1]++){
-			for(ic[0]=ic_start[0]-1; ic[0]<=ic_stop[0]+1; ic[0]++){
-				nump=0;
-				for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-					nump++;
-				}
-				std::cout<<"P"<<rank<<" - Cell["<<ic[0]<<","<<ic[1]<<"] contains "<<nump<<" Particles\n";
-				for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-					std::cout<<"\t("<<pi->p->X[0]<<","<<pi->p->X[1]<<")\n";
-				}
-			}
-		}
-	}
-	MPI::COMM_WORLD.Barrier();
 }
 
 void SimProcess::communicate(int com_d, Cell* cells){
@@ -771,7 +616,6 @@ void SimProcess::communicate(int com_d, Cell* cells){
 	MPI::COMM_WORLD.Recv(&recv_pl_upper, recv_pl_upper_length*COM_SZE, MPI::DOUBLE, neigh_upper[com_d], 2, status);
 	request.Wait(status);
 	if(neigh_upper[com_d]<rank){
-		std::cout<<"P"<<rank<<" has boder in "<<com_d<<" upper direction\n";
 		pb_corr=1;
 	}else{
 		pb_corr=0;
@@ -793,10 +637,8 @@ void SimProcess::communicate(int com_d, Cell* cells){
 	MPI::COMM_WORLD.Recv(&recv_pl_lower, recv_pl_lower_length*COM_SZE, MPI::DOUBLE, neigh_lower[com_d], 4, status);
 	request.Wait(status);
 	if(neigh_lower[com_d]>rank){
-		std::cout<<"P"<<rank<<" has boder in "<<com_d<<" lower direction\n";
 		pb_corr=-1;
 	}else{
-
 		pb_corr=0;
 	}
 	uncode_in_range(recv_pl_lower, icr_lower_start, icr_lower_stop, recv_pl_lower_length, cells, pb_corr, com_d);
@@ -838,53 +680,21 @@ void SimProcess::uncode_in_range(real* recv_pl, int* icr_start, int*icr_stop, in
 	while(pos<length_recv*COM_SZE){
 		p=new Particle();
 		uncode_p(&recv_pl[pos], p);
-		if(rank==0) std::cout<<"P"<<rank<<" got Particle at X["<<com_d<<"]=("<<p->X[0]<<"/"<<p->X[1]<<")";
 		// Periodic Boundaries
 		if(pb_corr!=0 && com_d!=-1){
-			if(pb_corr==-1){
-				if(rank==0) std::cout<<" in lower direction";
-			}else{
-				if(rank==0) std::cout<<" in upper direction";
-			}
-			if(rank==0) std::cout<<" changed to ";
 			p->X[com_d]+=pb_corr*global_size[com_d];
-			if(rank==0) std::cout<<p->X[com_d];
 		}
-		if(rank==0) std::cout<<" and inserted into ";
-//		if(com_d!=-1){
-//			ic[com_d]=icr_start[com_d];
-//			ic[1-com_d]=icr_start[1-com_d];
-//			while(p->X[com_d]<cells[local_index(ic)].start[com_d]){
-//				ic[com_d]--;
-//				if(ic[com_d]<icr_start[com_d]) std::cout<<"P"<<rank<<" com_d="<<com_d<<", ic[com_d]-- \n";
-//			}
-//			while(p->X[com_d]>=cells[local_index(ic)].start[com_d]+cell_size[com_d]){
-//				ic[com_d]++;
-//				if(ic[com_d]>icr_stop[com_d]) std::cout<<"P"<<rank<<" com_d="<<com_d<<", ic[com_d]++ \n";
-//			}
-//
-//		}else{
-			ic[0]=icr_start[0];
-			ic[1]=icr_start[1];
-			std::cout<<"P"<<rank<<" trying out ICs\n";
-			while(p->X[0]<cells[local_index(ic)].start[0]){
-				ic[0]--;
-				if(ic[0]<icr_start[0]) std::cout<<"P"<<rank<<" com_d=-1, ic[0]-- \n";
+		ic[0]=icr_start[0];
+		ic[1]=icr_start[1];
+		for(int d=0; d<DIM; d++){
+			while(p->X[d]<cells[local_index(ic)].start[d]){
+				ic[d]--;
 			}
-			while(p->X[0]>=cells[local_index(ic)].start[0]+cell_size[0]){
-				ic[0]++;
-				if(ic[0]>icr_stop[0]) std::cout<<"P"<<rank<<" com_d=-1, ic[0]++ \n";
+			while(p->X[d]>=cells[local_index(ic)].start[d]+cell_size[d]){
+				ic[d]++;
 			}
-			while(p->X[1]<cells[local_index(ic)].start[1]){
-				ic[1]--;
-				if(ic[1]>icr_start[1]) std::cout<<"P"<<rank<<" com_d=-1, ic[1]-- \n";
-			}
-			while(p->X[1]>=cells[local_index(ic)].start[1]+cell_size[1]){
-				ic[1]++;
-				if(ic[1]>icr_stop[1]) std::cout<<"P"<<rank<<" com_d=-1, ic[1]++ \n";
-			}
-//		}
-		if(rank==0) std::cout<<" Cell ["<<ic[0]<<","<<ic[1]<<"]\n";
+		}
+
 		cells[local_index(ic)].insertParticle(p);
 		if(p->X[0]>start[0] && p->X[0]<start[0]+local_size[0] &&
 			p->X[1]>start[1] && p->X[1]<start[1]+local_size[1]){
@@ -907,7 +717,6 @@ void SimProcess::uncode_p(real* code, Particle* p){
 	p->a_old[1]=code[7];
 	p->Epot=code[8];
 	p->Ekin=code[9];
-//	std::cout<<"P"<<rank<<" received ("<<p->X[0]<<"/"<<p->X[1]<<")\n";
 }
 
 void SimProcess::code_range(real* send_pl, int* icr_start, int* icr_stop, Cell* cells){
@@ -1002,7 +811,6 @@ void SimProcess::insert_particles(ParticleList* new_pl){
 			std::string line;
 
 			// Jump over first 5 Lines (Title + Corners)
-			getline(file, line);
 			getline(file, line);
 			getline(file, line);
 			getline(file, line);
