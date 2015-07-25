@@ -14,31 +14,43 @@ void SimProcess::timeIntegration(Cell* cells){
 	clock_t t_start;
 	compA(cells);
 	while (t<t_end && !aborted){
-		MPI::COMM_WORLD.Barrier();
+		#if DEBUG
+			MPI::COMM_WORLD.Barrier();
+		#endif
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compX\n";
 		if(rank==0) t_start=clock();
 		compX(cells);
-		MPI::COMM_WORLD.Barrier();
+		#if DEBUG
+			MPI::COMM_WORLD.Barrier();
+		#endif
 		if(rank==0) timerList->calc_avg_time("compX", t_start);
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - moveParticles\n";
 		if(rank==0) t_start=clock();
 		moveParticles(cells);
-		MPI::COMM_WORLD.Barrier();
+		#if DEBUG
+			MPI::COMM_WORLD.Barrier();
+		#endif
 		if(rank==0) timerList->calc_avg_time("moveParticles", t_start);
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - communicate\n";
 		if(rank==0) t_start=clock();
 		communicate(cells);
-		MPI::COMM_WORLD.Barrier();
+		#if DEBUG
+			MPI::COMM_WORLD.Barrier();
+		#endif
 		if(rank==0) timerList->calc_avg_time("communicate", t_start);
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compA\n";
 		if(rank==0) t_start=clock();
 		compA(cells);
-		MPI::COMM_WORLD.Barrier();
+		#if DEBUG
+			MPI::COMM_WORLD.Barrier();
+		#endif
 		if(rank==0) timerList->calc_avg_time("compA", t_start);
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compV\n";
 		if(rank==0) t_start=clock();
 		compV(cells);
-		MPI::COMM_WORLD.Barrier();
+		#if DEBUG
+			MPI::COMM_WORLD.Barrier();
+		#endif
 		if(rank==0) timerList->calc_avg_time("compV", t_start);
 		if(t_step_nr%output_resolution==0){
 			if(DOKU>=2) std::cout<<"Pr "<<rank<<" - output\n";
@@ -49,12 +61,13 @@ void SimProcess::timeIntegration(Cell* cells){
 		if(rank == 0) if((t_step_nr*100%(int)(t_end/delta_t))==0) std::cout<<"Process: "<<(int)((t/t_end)*100) + 1 <<"%\n";
 		t+=delta_t;
 		t_step_nr++;
-		MPI::COMM_WORLD.Barrier();
+		#if DEBUG
+			MPI::COMM_WORLD.Barrier();
+		#endif
 	}
 }
 
 void SimProcess::output(Cell* cells, int outp_nr){
-	MPI::COMM_WORLD.Barrier();
 	int ic[DIM];
 
 //	// Important: just particles stored in pl are considered
@@ -621,7 +634,7 @@ void SimProcess::communicate(int com_d, Cell* cells){
 		pb_corr=0;
 	}
 	uncode_in_range(recv_pl_upper, icr_upper_start, icr_upper_stop, recv_pl_upper_length, cells, pb_corr, com_d);
-
+//
 	// sending upper, receiving lower
 	int send_pl_upper_length = get_num_p(icr_upper_start, icr_upper_stop, cells);
 	int recv_pl_lower_length;
@@ -687,14 +700,12 @@ void SimProcess::uncode_in_range(real* recv_pl, int* icr_start, int*icr_stop, in
 		ic[0]=icr_start[0];
 		ic[1]=icr_start[1];
 		for(int d=0; d<DIM; d++){
-			while(p->X[d]<cells[local_index(ic)].start[d]){
-				ic[d]--;
-			}
 			while(p->X[d]>=cells[local_index(ic)].start[d]+cell_size[d]){
 				ic[d]++;
 			}
 		}
-
+//		std::cout<<"P"<<rank<<" cell ["<<ic[0]<<","<<ic[1]<<"]="<<local_index(ic)<<"\n";
+//		std::cout<<"size"<<cells[local_index(ic)].cell_size[1]<<"\n";
 		cells[local_index(ic)].insertParticle(p);
 		if(p->X[0]>start[0] && p->X[0]<start[0]+local_size[0] &&
 			p->X[1]>start[1] && p->X[1]<start[1]+local_size[1]){
