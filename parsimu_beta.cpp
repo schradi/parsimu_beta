@@ -66,21 +66,21 @@ int main(int argc, char* argv[]) {
 	sim_p->communicate(cells);
 	MPI::COMM_WORLD.Barrier();
 	sim_p->timeIntegration(cells);
-//	MPI::COMM_WORLD.Barrier();
-//	if(sim_p->rank==0){
-//		std::cout<<"DONE\n";
-//		std::fstream file;
-//		file.open("times.csv", std::ios::out | std::ios::app);
-//		file<<c_nump*c_nump;
-//		for(TimerList* ti=sim_p->timerList; ti!=NULL; ti=ti->next){
-//			file<<" "<<ti->t->timer;
-//			std::cout<<ti->t->tag<<" ";
-//		}
-//		file<<"\n";
-//		std::cout<<"\n";
-//		file.close();
-//	}
-//
+	MPI::COMM_WORLD.Barrier();
+	if(sim_p->rank==0){
+		std::cout<<"DONE\n";
+		std::fstream file;
+		file.open("times.csv", std::ios::out | std::ios::app);
+		file<<c_nump*c_nump;
+		for(TimerList* ti=sim_p->timerList; ti!=NULL; ti=ti->next){
+			file<<" "<<ti->t->timer;
+			std::cout<<ti->t->tag<<" ";
+		}
+		file<<"\n";
+		std::cout<<"\n";
+		file.close();
+	}
+
 	MPI::Finalize();
 	return 0;
 }
