@@ -70,10 +70,11 @@ int main(int argc, char* argv[]) {
 	if(sim_p->rank==0){
 		std::cout<<"DONE\n";
 		std::fstream file;
-		file.open("times.csv", std::ios::out | std::ios::app);
+		file.open("Times.csv", std::ios::out | std::ios::app);
 		file<<c_nump*c_nump;
 		for(TimerList* ti=sim_p->timerList; ti!=NULL; ti=ti->next){
-			file<<" "<<ti->t->timer;
+			file<<ti->t->tag<<": ";
+			file<<" "<<ti->t->timer<<"\n";
 			std::cout<<ti->t->tag<<" ";
 		}
 		file<<"\n";
