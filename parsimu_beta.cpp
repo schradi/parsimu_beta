@@ -73,9 +73,8 @@ int main(int argc, char* argv[]) {
 		file.open("Times.csv", std::ios::out | std::ios::app);
 		file<<c_nump*c_nump;
 		for(TimerList* ti=sim_p->timerList; ti!=NULL; ti=ti->next){
-			file<<ti->t->tag<<": ";
-			file<<" "<<ti->t->timer<<"\n";
-			std::cout<<ti->t->tag<<" ";
+			file<<ti->t->timer<<",\t";
+			std::cout<<ti->t->tag<<", ";
 		}
 		file<<"\n";
 		std::cout<<"\n";
