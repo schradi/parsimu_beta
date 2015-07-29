@@ -8,13 +8,13 @@
 #include "SimProcess.h"
 
 void SimProcess::timeIntegration(Cell* cells){
-	clock_t t_start;
-	if(rank==0) t_start=clock();
 	t=delta_t;
 	long int t_step_nr=1;
 	if(DOKU>=0) if(rank==0) std::cout<<"-----------------------\n- starting Simulation -\n-----------------------\n";
 	compA(cells);
 	while (t<t_end && !aborted){
+		clock_t t_start;
+		if(rank==0) t_start=clock();
 		#if DEBUG
 			MPI::COMM_WORLD.Barrier();
 		#endif
@@ -53,8 +53,8 @@ void SimProcess::timeIntegration(Cell* cells){
 		#if DEBUG
 			MPI::COMM_WORLD.Barrier();
 		#endif
+		if(rank==0) timerList->calc_avg_time("timeIntegration", t_start);
 	}
-	if(rank==0) timerList->calc_avg_time("timeIntegration", t_start);
 }
 
 void SimProcess::output(Cell* cells, int outp_nr){
@@ -68,7 +68,6 @@ void SimProcess::output(Cell* cells, int outp_nr){
 
 	if(DOKU>=3 )std::cout<<"Pr "<<rank<<" - output - begin\n";
 	if(rank==0){
-		clock_t t_debug;
 
 		// MASTER: Receives information from other processes and puts them in a file
 		int recv_pl_l[global_np[0]*global_np[1]]; // Number of particles of each process
@@ -110,7 +109,6 @@ void SimProcess::output(Cell* cells, int outp_nr){
 		file<<"0,"<<global_size[0]<<",0,"<<global_size[1]<<",0\n";
 		real Ekin_ges=0;
 		real Epot_ges=0;
-		if(rank==0) t_debug=clock();
 		for(pos=0; pos<recv_pl_al*COM_SZE; pos+=COM_SZE){
 			/*
 						 * 	code[0]=p->id;
@@ -130,7 +128,6 @@ void SimProcess::output(Cell* cells, int outp_nr){
 
 		}
 		file.close();
-		if(rank==0) timerList->calc_avg_time("t_debug", t_debug);
 //		file.open("data/energy.csv", std::ios::out|std::ios::app);
 //		file<<t<<","<<Ekin_ges+Epot_ges<<","<<Epot_ges<<","<<Ekin_ges<<"\n";
 //		file.close();
