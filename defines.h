@@ -17,7 +17,7 @@
 
 #define DIM 2 /**< Dimension of the Simulation*/
 #define COM_SZE 10
-#define DOKU 3
+#define DOKU 1
 
 #define DEBUG true
 

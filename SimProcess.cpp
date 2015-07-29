@@ -8,56 +8,44 @@
 #include "SimProcess.h"
 
 void SimProcess::timeIntegration(Cell* cells){
+	clock_t t_start;
+	if(rank==0) t_start=clock();
 	t=delta_t;
 	long int t_step_nr=1;
 	if(DOKU>=0) if(rank==0) std::cout<<"-----------------------\n- starting Simulation -\n-----------------------\n";
-	clock_t t_start;
 	compA(cells);
 	while (t<t_end && !aborted){
 		#if DEBUG
 			MPI::COMM_WORLD.Barrier();
 		#endif
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compX\n";
-		if(rank==0) t_start=clock();
 		compX(cells);
 		#if DEBUG
 			MPI::COMM_WORLD.Barrier();
 		#endif
-		if(rank==0) timerList->calc_avg_time("compX", t_start);
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - moveParticles\n";
-		if(rank==0) t_start=clock();
 		moveParticles(cells);
 		#if DEBUG
 			MPI::COMM_WORLD.Barrier();
 		#endif
-		if(rank==0) timerList->calc_avg_time("moveParticles", t_start);
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - communicate\n";
-		if(rank==0) t_start=clock();
 		communicate(cells);
 		#if DEBUG
 			MPI::COMM_WORLD.Barrier();
 		#endif
-		if(rank==0) timerList->calc_avg_time("communicate", t_start);
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compA\n";
-		if(rank==0) t_start=clock();
 		compA(cells);
 		#if DEBUG
 			MPI::COMM_WORLD.Barrier();
 		#endif
-		if(rank==0) timerList->calc_avg_time("compA", t_start);
 		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compV\n";
-		if(rank==0) t_start=clock();
 		compV(cells);
 		#if DEBUG
 			MPI::COMM_WORLD.Barrier();
 		#endif
-		if(rank==0) timerList->calc_avg_time("compV", t_start);
 		if(t_step_nr%output_resolution==0){
 			if(DOKU>=2) std::cout<<"Pr "<<rank<<" - output\n";
-			if(rank==0) t_start=clock();
-			compE(cells, t);
 			output(cells, (int) t_step_nr/output_resolution);
-			if(rank==0) timerList->calc_avg_time("output", t_start);
 		}
 		if(rank == 0) if((t_step_nr*100%(int)(t_end/delta_t))==0) std::cout<<"Process: "<<(int)((t/t_end)*100) + 1 <<"%\n";
 		t+=delta_t;
@@ -66,46 +54,12 @@ void SimProcess::timeIntegration(Cell* cells){
 			MPI::COMM_WORLD.Barrier();
 		#endif
 	}
+	if(rank==0) timerList->calc_avg_time("timeIntegration", t_start);
 }
-
-void SimProcess::compE(Cell* cells, real t){
-	real Ekin=0;
-	real Epot=0;
-	int ic[DIM];
-	int nc[DIM];
-	Cell* ci;
-	Cell* cj;
-	Particle* p;
-	for (ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
-		for (ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
-			ci=&cells[local_index(ic)];
-			for(ParticleList* pi=ci->pl; pi!=NULL; pi=pi->next){
-				p=pi->p;
-				Ekin+=0.5*p->m*pow(abs(p->V),2);
-				for (nc[1]=ic[1]-1;nc[1]<=ic[1]+1;nc[1]++){
-					for (nc[0]=ic[0]-1;nc[0]<=ic[0]+1;nc[0]++){
-						// for each neighboring cell
-						cj=&cells[local_index(nc)];
-						for(ParticleList* pj=cj->pl; pj!=NULL; pj=pj->next ){
-							if(pj!=pi){
-								Epot+=0.5*lj_potential(abs(p->X, pj->p->X));
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	Epot=-1*Epot;
-	std::fstream file;
-	file.open("energy.csv", std::ios::out|std::ios::app);
-	file<<t<<","<<Epot<<","<<Ekin<<","<<Epot+Ekin<<"\n";
-	file.close();
-}
-
-
 
 void SimProcess::output(Cell* cells, int outp_nr){
+	clock_t t_start;
+	if(rank==0) t_start=clock();
 	int ic[DIM];
 
 //	// Important: just particles stored in pl are considered
@@ -114,6 +68,8 @@ void SimProcess::output(Cell* cells, int outp_nr){
 
 	if(DOKU>=3 )std::cout<<"Pr "<<rank<<" - output - begin\n";
 	if(rank==0){
+		clock_t t_debug;
+
 		// MASTER: Receives information from other processes and puts them in a file
 		int recv_pl_l[global_np[0]*global_np[1]]; // Number of particles of each process
 		int recv_pl_al=num_part;	// Number of particles at all
@@ -148,25 +104,37 @@ void SimProcess::output(Cell* cells, int outp_nr){
 		strcat(outputfile_new, cline_nr);
 		file.open(outputfile_new, std::ios::out|std::ios::trunc);
 //		file<<"x coord, my coord, x velocity, y velocity\n";
-		file<<"0,0,0,0,0,0,0,0,0\n";
-		file<<"0,0,"<<global_size[0]<<",0,0,0,0,0,0\n";
-		file<<"0,0,0,0,0,"<<global_size[1]<<",0,0,0\n";
-		file<<"0,0,"<<global_size[0]<<",0,0,"<<global_size[1]<<",0,0,0\n";
+		file<<"0,0,0,0,0\n";
+		file<<"0,"<<global_size[0]<<",0,0,0\n";
+		file<<"0,0,0,"<<global_size[1]<<",0\n";
+		file<<"0,"<<global_size[0]<<",0,"<<global_size[1]<<",0\n";
 		real Ekin_ges=0;
 		real Epot_ges=0;
+		if(rank==0) t_debug=clock();
 		for(pos=0; pos<recv_pl_al*COM_SZE; pos+=COM_SZE){
+			/*
+						 * 	code[0]=p->id;
+							code[1]=p->m;
+							code[2]=p->X[0];
+							code[3]=p->V[0];
+							code[4]=p->a_old[0];
+							code[5]=p->X[1];
+							code[6]=p->V[1];
+							code[7]=p->a_old[1];
+							code[8]=p->Epot;
+							code[9]=p->Ekin;
+						 */
+			file<<recv_pl[pos]<<","<<recv_pl[pos+2]<<","<<recv_pl[pos+3]<<","<<recv_pl[pos+5]<<","<<recv_pl[pos+6]<<"\n";
+//			Epot_ges+=recv_pl[pos+8];
+//			Ekin_ges+=recv_pl[pos+9];
 
-			for(int i=0; i<COM_SZE; i++){
-				file<<recv_pl[pos+i]<<",\t";
-			}
-			Epot_ges+=recv_pl[pos+8];
-			Ekin_ges+=recv_pl[pos+9];
-			file<<"\n";
 		}
 		file.close();
-		file.open("data/energy.csv", std::ios::out|std::ios::app);
-		file<<t<<","<<Ekin_ges+Epot_ges<<","<<Epot_ges<<","<<Ekin_ges<<"\n";
-		file.close();
+		if(rank==0) timerList->calc_avg_time("t_debug", t_debug);
+//		file.open("data/energy.csv", std::ios::out|std::ios::app);
+//		file<<t<<","<<Ekin_ges+Epot_ges<<","<<Epot_ges<<","<<Ekin_ges<<"\n";
+//		file.close();
+
 	}else{
 		// Sending number of Particles
 		real send_pl[num_part*COM_SZE];
@@ -177,9 +145,12 @@ void SimProcess::output(Cell* cells, int outp_nr){
 		MPI::COMM_WORLD.Send(send_pl, num_part*COM_SZE, MPI::DOUBLE, 0, 2);
 	}
 	if(DOKU>=3) std::cout<<"Pr "<<rank<<" - output - end\n";
+	if(rank==0) timerList->calc_avg_time("output", t_start);
 }
 
 void SimProcess::compA(Cell* cells){
+	clock_t t_start;
+	if(rank==0) t_start=clock();
 	int ic[DIM];
 	int nc[DIM];
 	Cell* ci;
@@ -218,10 +189,12 @@ void SimProcess::compA(Cell* cells){
 			}
 		}
 	}
-
+	if(rank==0) timerList->calc_avg_time("compA", t_start);
 }
 
 void SimProcess::compV(Cell* cells){
+	clock_t t_start;
+	if(rank==0) t_start=clock();
 	Cell* c;
 	int ic[DIM];
 	real V_ges;
@@ -240,10 +213,12 @@ void SimProcess::compV(Cell* cells){
 			}
 		}
 	}
-
+	if(rank==0) timerList->calc_avg_time("compV", t_start);
 }
 
 void SimProcess::compX(Cell* cells){
+	clock_t t_start;
+	if(rank==0) t_start=clock();
 	Cell* c;
 	int ic[DIM];
 	for (ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
@@ -257,9 +232,12 @@ void SimProcess::compX(Cell* cells){
 			}
 		}
 	}
+	if(rank==0) timerList->calc_avg_time("compX", t_start);
 }
 
 void SimProcess::moveParticles(Cell* cells){
+	clock_t t_start;
+	if(rank==0) t_start=clock();
 	Cell* c;
 	int   ic[DIM];
 	int   new_ic[DIM];
@@ -267,7 +245,6 @@ void SimProcess::moveParticles(Cell* cells){
 	ParticleList* tmp;
 	ParticleList* prev;
 	ParticleList* akt;
-	std::cout<<"!";
 	for (ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
 		for (ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
 			prev=NULL;
@@ -275,11 +252,20 @@ void SimProcess::moveParticles(Cell* cells){
 			c=&cells[local_index(ic)];
 			akt=c->pl;
 			while(akt!=NULL){
-				std::cout<<"-";
+				new_cell=false;
 				for(int d=0; d<DIM; d++){
-					new_ic[d]=floor(akt->p->X[d]/cell_size[d]);
+					new_ic[d]=ic[d];
+					if(akt->p->X[d]<c->start[d]){
+						new_ic[d]-=1;
+						new_cell=true;
+					}else{
+						if(akt->p->X[d]>=c->start[d]+cell_size[d]){
+							new_ic[d]+=1;
+							new_cell=true;
+						}
+					}
 				}
-				if(ic[0]!= new_ic[0] || ic[1]!= new_ic[1]){
+				if(new_cell){
 					if(prev!=NULL){
 						prev->next=akt->next;
 					}else{
@@ -302,6 +288,7 @@ void SimProcess::moveParticles(Cell* cells){
 			}
 		}
 	}
+	if(rank==0) timerList->calc_avg_time("moveParticles", t_start);
 }
 
 int SimProcess::getLocalCellId(real* X){
@@ -309,88 +296,6 @@ int SimProcess::getLocalCellId(real* X){
 	id[0]=(int) ceil((X[0]/r_cut)-1);	// Abrunden
 	id[1]=(int) ceil((X[1]/r_cut)-1);
 	return local_index(id);
-}
-
-void SimProcess::devide_symetric(){
-	// muss davor bestimmt sein:
-	// rank, np, global_size, cell_size, global_nc
-	int akt_split[DIM];
-	real akt_psize[DIM];
-	real akt_rating=0;
-	real best_rating=0;
-	for(akt_split[0] = 1; akt_split[0]<=np; akt_split[0]++){
-		if(np%akt_split[0]==0){
-			akt_psize[0]=global_size[0]/akt_split[0];
-			akt_split[1]=np/akt_split[0];
-			akt_psize[1]=global_size[1]/akt_split[1];
-			akt_rating=akt_psize[1]/akt_psize[0];
-			if(akt_rating>1) akt_rating=1/akt_rating;
-			if(akt_rating>best_rating){
-				best_rating=akt_rating;
-				for(int d=0; d<DIM; d++){
-					global_np[d]=akt_split[d];
-				}
-			}
-		}
-	}
-
-	if(rank==0) std::cout<<"spliting the field in "<<global_np[0]<<"x"<<global_np[1]<<" Processes\n";
-	if(rank==0) std::cout<<"cell_size: "<<cell_size[0]<<"x"<<cell_size[1]<<"\n";
-
-	ip[0]=rank%global_np[0];
-	ip[1]=rank/global_np[0];
-
-	for(int d=0; d<DIM; d++){
-		local_nc[d]=global_nc[d]/global_np[d];
-		if(ip[d]<global_nc[d]%global_np[d]){
-			local_nc[d]++;
-		}
-	}
-
-	for(int d=0; d<DIM; d++){
-		ic_start[d]=global_nc[d]/global_np[d]*ip[d];
-		if(ip[d]<global_nc[d]%global_np[d]){
-			ic_start[d]+=ip[d];
-		}else{
-			ic_start[d]+=global_nc[d]%global_np[d];
-		}
-	}
-
-	for(int d=0; d<DIM; d++){
-		start[d]=ic_start[d]*cell_size[d];
-		ic_stop[d]=ic_start[d]+local_nc[d]-1;
-		local_size[d]=cell_size[d]*local_nc[d];
-	}
-
-//	for(int p=0; p<np; p++){
-//		MPI::COMM_WORLD.Barrier();
-//		if(rank==p)std::cout<<" ";
-//		MPI::COMM_WORLD.Barrier();
-//		if(rank==p){
-//			std::cout<<"\nProcess "<<rank<<": \n";
-//			std::cout<<"ic_start: ";
-//			for(int d=0; d<DIM; d++)std::cout<<ic_start[d]<<",";
-//			std::cout<<"\n";
-//			std::cout<<"ic_stop: ";
-//			for(int d=0; d<DIM; d++)std::cout<<ic_stop[d]<<",";
-//			std::cout<<"\n";
-//			std::cout<<"ip: ";
-//			for(int d=0; d<DIM; d++)std::cout<<ip[d]<<",";
-//			std::cout<<"\n";
-//			std::cout<<"local_nc: ";
-//			for(int d=0; d<DIM; d++)std::cout<<local_nc[d]<<",";
-//			std::cout<<"\n";
-//			std::cout<<"local_size: ";
-//			for(int d=0; d<DIM; d++)std::cout<<local_size[d]<<",";
-//			std::cout<<"\n";
-//			std::cout<<"global_np: ";
-//			for(int d=0; d<DIM; d++)std::cout<<global_np[d]<<",";
-//			std::cout<<"\n";
-//			std::cout<<"start - "<<local_index(ic_start)<<" : ";
-//			for(int d=0; d<DIM; d++)std::cout<<start[d]<<",";
-//			std::cout<<"\n";
-//		}
-//	}
 }
 
 SimProcess::SimProcess(){
@@ -425,7 +330,6 @@ SimProcess::SimProcess(){
 		int myint=0;
 		r_cut=-1;
 		global_size[0]=-1;
-		global_size[1]=-1;
 		t_end=-1;
 		delta_t=-1;
 		output_resolution=-1;
@@ -437,12 +341,9 @@ SimProcess::SimProcess(){
 				file >> line;
 				r_cut = atof(line);
 			}
-			if(!strcmp(line, "global_size[0]")){
+			if(!strcmp(line, "global_size")){
 				file >> line;
 				global_size[0] = atof(line);
-			}
-			if(!strcmp(line, "global_size[1]")){
-				file >> line;
 				global_size[1] = atof(line);
 			}
 			if(!strcmp(line, "t_end")){
@@ -471,8 +372,7 @@ SimProcess::SimProcess(){
 			}
 		}
 		if(r_cut==-1) std::cout<< "r_cut was not declared\n";
-		if(global_size[0]==-1) std::cout<< "global_size[0] was not declared\n";
-		if(global_size[1]==-1) std::cout<< "global_size[1] was not declared\n";
+		if(global_size[0]==-1) std::cout<< "global_size was not declared\n";
 		if(t_end==-1) std::cout<< "t_end was not declared\n";
 		if(delta_t==-1) std::cout<< "delta_t was not declared\n";
 		if(output_resolution==-1) std::cout<< "output_resolution was not declared\n";
@@ -559,7 +459,6 @@ SimProcess::SimProcess(){
 		ic_start[d]=ip[d]*local_nc[d];
 		ic_stop[d]=ic_start[d]+local_nc[d]-1;
 	}
-//	std::cout<<"P"<<rank<<" - ic_start=["<<ic_start[0]<<","<<ic_start[1]<<"], ic_stop=["<<ic_stop[0]<<","<<ic_stop[1]<<"]\n";
 
 	if(ip[0]-1>=0){
 		neigh_lower[0]=ip[0]-1+global_np[0]*ip[1];
@@ -589,9 +488,7 @@ SimProcess::SimProcess(){
 		file.open("data/settings", std::ios::out | std::ios::trunc);
 		file<<"---Included settings---\n";
 		file<<"r_cut\t"<<r_cut<<"\n";
-		for(int d=0; d<DIM; d++){
-			file<<"global_size["<<d<<"]\t"<<global_size[d]<<"\n";
-		}
+		file<<"global_size\t"<<global_size[0]<<"\n";
 		file<<"t_end\t"<<t_end<<"\n";
 		file<<"delta_t\t"<<delta_t<<"\n";
 		file<<"output_resolution\t"<<output_resolution<<"\n";
@@ -645,39 +542,22 @@ SimProcess::SimProcess(){
 void SimProcess::create_cells(Cell* cells){
 	real p_cell_start[DIM];
 	int ic[DIM];
-	int ic_index[DIM];
 	for (ic[1]=ic_start[1]-1; ic[1]<=ic_stop[1]+1; ic[1]++){
 		for (ic[0]=ic_start[0]-1; ic[0]<=ic_stop[0]+1; ic[0]++){
 			for (int d=0; d<DIM; d++){
-				p_cell_start[d]=start[d]+ic[d]*cell_size[d];
-				ic_index[d]=ic[d]+1;
+				p_cell_start[d]=ic[d]*r_cut;
 			}
 			cells[local_index(ic)].set_params(p_cell_start, index(ic, global_nc), cell_size);
 		}
 	}
 }
 
-real SimProcess::abs(real* X){
+void SimProcess::force(real* X, real* F){
 	real r=0; /**< length*/
 	for (int d=0;d<DIM;d++){
 		r+=X[d]*X[d];
 	}
 	r=sqrt(r);
-	return r;
-}
-
-real SimProcess::abs(real* X1, real* X2){
-	real dist[DIM];
-	for(int d=0; d<DIM; d++){
-		dist[d]=X1[d]-X2[d];
-	}
-	return abs(dist);
-}
-
-
-
-void SimProcess::force(real* X, real* F){
-	real r=abs(X);
 
 	//calculate force
 	if(r<=r_cut){
@@ -697,65 +577,44 @@ void SimProcess::force(real* X, real* F){
 	F[1]+=X[1];
 }
 
-real SimProcess::lj_potential(real r){
-	return 4*epsilon*(pow(sigma/r,12)-pow(sigma/r,6));
-}
-
 real SimProcess::lj_force(real r){
-	return 24*epsilon/r*(2*pow(sigma/r, 12)-pow(sigma/r, 6));
+	real f1;
+	real f2;
+	f1=pow(sigma/r, 12);
+	f2=pow(sigma/r, 6);
+	return 24*epsilon/r*(2*f1-f2);
 }
 
 void SimProcess::communicate(Cell* cells){
+	clock_t t_start;
+	if(rank==0) t_start=clock();
 	int ic[DIM];
 	// For all surrounding Ghost-Cells: delete Pl
 	// For all cells: include adding in PL
-	clock_t t_start;
-	if(rank==0) t_start=clock();
 	Cell* c;
-	if(t!=0){
-		for(ic[1]=ic_start[1]-1; ic[1]<=ic_stop[1]+1; ic[1]++){
-			for(ic[0]=ic_start[0]-1; ic[0]<=ic_stop[0]+1; ic[0]++){
-				c=&cells[local_index(ic)];
-				if(ic[0]==ic_start[0]-1 || ic[0] == ic_stop[0]+1 ||
-						ic[1]==ic_start[1]-1 || ic[1] == ic_stop[1]+1){
-					c->deletePl();
-				}
-				c->adding_to_pl();
+	for(ic[1]=ic_start[1]-1; ic[1]<=ic_stop[1]+1; ic[1]++){
+		for(ic[0]=ic_start[0]-1; ic[0]<=ic_stop[0]+1; ic[0]++){
+			c=&cells[local_index(ic)];
+			if(ic[0]==ic_start[0]-1 || ic[0] == ic_stop[0]+1 ||
+					ic[1]==ic_start[1]-1 || ic[1] == ic_stop[1]+1){
+				c->deletePl();
 			}
+			c->adding_to_pl();
 		}
 	}
 	MPI::COMM_WORLD.Barrier();
-	if(rank==0) timerList->calc_avg_time("adding_to_pl", t_start);
-//	for(int i=0; i<np; i++){
-//		MPI::COMM_WORLD.Barrier();
-//		if(i==rank){
-//			for(ic[1]=ic_start[1]-1; ic[1]<=ic_stop[1]+1; ic[1]++){
-//				for(ic[0]=ic_start[0]-1; ic[0]<=ic_stop[0]+1; ic[0]++){
-//					std::cout<<"P"<<rank<<"-C["<<ic[0]<<","<<ic[1]<<"] Particles:";
-//					int c=0;
-//					for(ParticleList* pi=cells[local_index(ic)].pl; pi!=NULL; pi=pi->next){
-//						std::cout<<"("<<pi->p->X[0]<<","<<pi->p->X[1]<<") ";
-//					}
-//					std::cout<<"\n";
-//				}
-//			}
-//		}
-//	}
 
 	for(int d=0; d<DIM; d++){
-		if(rank==0) t_start=clock();
 		communicate(d, cells);
-		if(rank==0) timerList->calc_avg_time("communicate_1_d", t_start);
 	}
+	if(rank==0) timerList->calc_avg_time("communicate", t_start);
 }
 
 void SimProcess::communicate(int com_d, Cell* cells){
 	clock_t t_start;
+	if(rank==0) t_start=clock();
 	MPI::Request request;
 	MPI::Status status;
-//	if(rank==0) t_start=clock();
-//	if(rank==0) timerList->calc_avg_time("communicate_1_d", t_start);
-
 	int oth_d;
 	if(com_d==0){
 		oth_d=1;
@@ -776,66 +635,45 @@ void SimProcess::communicate(int com_d, Cell* cells){
 	icr_upper_stop[com_d]=ic_stop[com_d]+1;
 	icr_upper_stop[oth_d]=ic_stop[oth_d]+1;
 
-//	if(rank==0) t_start=clock();
 	int send_pl_lower_length = get_num_p(icr_lower_start, icr_lower_stop, cells);
-//	if(rank==0) timerList->calc_avg_time("get_num_p", t_start);
 	int recv_pl_upper_length;
 	real send_pl_lower[send_pl_lower_length*COM_SZE];
-//	if(rank==0) timerList->calc_avg_time("com_1d_start", t_start);
-//	if(rank==0) t_start=clock();
+
 	code_range(send_pl_lower, icr_lower_start, icr_lower_stop, cells);
-//	if(rank==0) timerList->calc_avg_time("code_range_lower", t_start);
-//	std::cout<<"P"<<rank<<" sends "<<send_pl_lower_length<<" to lower"<<com_d<<" P"<<neigh_lower[com_d]<<"\n";
-//	if(rank==0) t_start=clock();
 	request = MPI::COMM_WORLD.Isend(&send_pl_lower_length, 1, MPI::INT, neigh_lower[com_d], 1);
 	delete_pl(icr_lower_start, icr_lower_stop, cells);
 	MPI::COMM_WORLD.Recv(&recv_pl_upper_length, 1, MPI::INT, neigh_upper[com_d], 1, status);
-	request.Wait(status);
-//	if(rank==0) timerList->calc_avg_time("send_length_lower", t_start);
-//	std::cout<<"P"<<rank<<" received "<<recv_pl_upper_length<<" from upper"<<com_d<<" P"<<neigh_upper[com_d]<<"\n";
 	real recv_pl_upper[recv_pl_upper_length*COM_SZE];
-//	if(rank==0) t_start=clock();
 	request = MPI::COMM_WORLD.Isend(&send_pl_lower, send_pl_lower_length*COM_SZE, MPI::DOUBLE, neigh_lower[com_d], 2);
 	MPI::COMM_WORLD.Recv(&recv_pl_upper, recv_pl_upper_length*COM_SZE, MPI::DOUBLE, neigh_upper[com_d], 2, status);
-//	request.Wait(status);
-//	if(rank==0) timerList->calc_avg_time("send_list_lower", t_start);
 	if(neigh_upper[com_d]<rank){
 		pb_corr=1;
 	}else{
 		pb_corr=0;
 	}
-//	if(rank==0) t_start=clock();
 	uncode_in_range(recv_pl_upper, icr_upper_start, icr_upper_stop, recv_pl_upper_length, cells, pb_corr, com_d);
-//	if(rank==0) timerList->calc_avg_time("uncode_in_range_lower", t_start);
 
 	// sending upper, receiving lower
 	int send_pl_upper_length = get_num_p(icr_upper_start, icr_upper_stop, cells);
 	int recv_pl_lower_length;
 	real send_pl_upper[send_pl_upper_length*COM_SZE];
-//	if(rank==0) t_start=clock();
 	code_range(send_pl_upper, icr_upper_start, icr_upper_stop, cells);
-//	if(rank==0) timerList->calc_avg_time("code_range_upper", t_start);
-//	std::cout<<"P"<<rank<<" sends "<<send_pl_upper_length<<" to lupper"<<com_d<<" P"<<neigh_upper[com_d]<<"\n";
-//	if(rank==0) t_start=clock();
 	request = MPI::COMM_WORLD.Isend(&send_pl_upper_length, 1, MPI::INT, neigh_upper[com_d], 3);
 	MPI::COMM_WORLD.Recv(&recv_pl_lower_length, 1, MPI::INT, neigh_lower[com_d], 3, status);
 	request.Wait(status);
-//	if(rank==0) timerList->calc_avg_time("send_length_upper", t_start);
-//	std::cout<<"P"<<rank<<" received "<<recv_pl_lower_length<<" from lower"<<com_d<<" P"<<neigh_lower[com_d]<<"\n";
+
 	real recv_pl_lower[recv_pl_lower_length*COM_SZE];
-//	if(rank==0) t_start=clock();
 	request = MPI::COMM_WORLD.Isend(&send_pl_upper, send_pl_upper_length*COM_SZE, MPI::DOUBLE, neigh_upper[com_d], 4);
 	MPI::COMM_WORLD.Recv(&recv_pl_lower, recv_pl_lower_length*COM_SZE, MPI::DOUBLE, neigh_lower[com_d], 4, status);
 	request.Wait(status);
-//	if(rank==0) timerList->calc_avg_time("send_list_upper", t_start);
+
 	if(neigh_lower[com_d]>rank){
 		pb_corr=-1;
 	}else{
 		pb_corr=0;
 	}
-//	if(rank==0) t_start=clock();
 	uncode_in_range(recv_pl_lower, icr_lower_start, icr_lower_stop, recv_pl_lower_length, cells, pb_corr, com_d);
-	if(rank==0) timerList->calc_avg_time("communicate_1_d_inner", t_start);
+	if(rank==0) timerList->calc_avg_time("communicate_1d", t_start);
 }
 
 void SimProcess::delete_pl(int* icr_start, int* icr_stop, Cell* cells){
@@ -869,8 +707,6 @@ void SimProcess::uncode_in_range(real* recv_pl, int* icr_start, int*icr_stop, in
 	int pos=0;
 	Particle* p;
 	int ic[DIM];
-//	if(rank==9) std::cout<<"P"<<rank<<" with icr_start ["<<icr_start[0]<<","<<icr_start[1]<<"]\n";
-	//
 	while(pos<length_recv*COM_SZE){
 		p=new Particle();
 		uncode_p(&recv_pl[pos], p);
@@ -878,11 +714,13 @@ void SimProcess::uncode_in_range(real* recv_pl, int* icr_start, int*icr_stop, in
 		if(pb_corr!=0 && com_d!=-1){
 			p->X[com_d]+=pb_corr*global_size[com_d];
 		}
-		ic[0]=floor(p->X[0]/cell_size[0]);
-		ic[1]=floor(p->X[1]/cell_size[1]);
-
-
-//		if(rank==9) std::cout<<"P"<<rank<<" has Particle at ("<<p->X[0]<<","<<p->X[1]<<") in Cell ["<<ic[0]<<","<<ic[1]<<"], test["<<(int) (p->X[0]/cell_size[0])<<","<<(int) (p->X[1]/cell_size[1])<<"]\n";
+		ic[0]=icr_start[0];
+		ic[1]=icr_start[1];
+		for(int d=0; d<DIM; d++){
+			while(p->X[d]>=cells[local_index(ic)].start[d]+cell_size[d]){
+				ic[d]++;
+			}
+		}
 //		std::cout<<"P"<<rank<<" cell ["<<ic[0]<<","<<ic[1]<<"]="<<local_index(ic)<<"\n";
 //		std::cout<<"size"<<cells[local_index(ic)].cell_size[1]<<"\n";
 		cells[local_index(ic)].insertParticle(p);
@@ -956,7 +794,7 @@ void SimProcess::create_particles(ParticleList* new_pl, real* r_start, real* r_s
 			new_pl->p->m=1;
 			for(int d=0; d<DIM; d++){
 				new_pl->p->X[d]=pos[d];
-				new_pl->p->V[d]=0.1+p_V[d]+(Vvar-(float) (rand()) / ((float) (RAND_MAX/(Vvar*2))));
+				new_pl->p->V[d]=p_V[d]+(Vvar-(float) (rand()) / ((float) (RAND_MAX/(Vvar*2))));
 //				new_pl->p->V[d]=0.5;
 			}
 		}
@@ -1141,23 +979,25 @@ void SimProcess::initData(Cell* cells){
 		int proc[DIM];
 		int proc_idx=0;
 		int n=0;
+
+
 		while(to_insert!=NULL){
-            n++;
-            proc[0]=0;
-            proc[1]=0;
-            while(to_insert->p->X[0]>=(proc[0]+1)*global_size[0]/global_np[0]){
-                    proc[0]++;
-            }
-            while(to_insert->p->X[1]>=(proc[1]+1)*global_size[1]/global_np[1]){
-                    proc[1]++;
-            }
-            proc_idx=index(proc, global_np);
-            // current particle is placed in the beginning of the list for each process
-            tmp=to_insert->next;
-            to_insert->next=sorted_Particles[proc_idx];
-            sorted_Particles[proc_idx]=to_insert;
-            to_insert=tmp;
-            *pl_l[proc_idx]+=1;
+			n++;
+			proc[0]=0;
+			proc[1]=0;
+			while(to_insert->p->X[0]>=(proc[0]+1)*local_size[0]){
+				proc[0]++;
+			}
+			while(to_insert->p->X[1]>=(proc[1]+1)*local_size[1]){
+				proc[1]++;
+			}
+			proc_idx=index(proc, global_np);
+			// current particle is placed in the beginning of the list for each process
+			tmp=to_insert->next;
+			to_insert->next=sorted_Particles[proc_idx];
+			sorted_Particles[proc_idx]=to_insert;
+			to_insert=tmp;
+			*pl_l[proc_idx]+=1;
 		}
 
 		// Sending number of Particles
@@ -1190,16 +1030,10 @@ void SimProcess::initData(Cell* cells){
 		int recv_l;
 		MPI::COMM_WORLD.Recv(&recv_l, 1, MPI::INT, 0, rank);
 		num_part=recv_l;
-//		std::cout<<"P"<<rank<<" received "<<recv_l<<" particles\n";
 
 		// Receiving Particles as Array of real
 		real cod_pl[COM_SZE*num_part];
 		MPI::COMM_WORLD.Recv(cod_pl, COM_SZE*num_part, MPI::DOUBLE, 0, global_nc[0]*global_nc[1]+rank);
-//		if(rank==9){
-//			for(int i=0; i<recv_l; i++){
-//				std::cout<<"P"<<rank<<" - Particle ("<<cod_pl[i*COM_SZE+2]<<","<<cod_pl[i*COM_SZE+5]<<")\n";
-//			}
-//		}
 		uncode_in_range(cod_pl, icr_start, icr_stop, num_part, cells);
 	}
 	// sort particles in Cells
@@ -1224,18 +1058,15 @@ void SimProcess::initData(Cell* cells){
 //		cells[local_index(ic)].insertParticle(tmp);
 //	}
 
-	int tmp=get_num_p(ic_start, ic_stop, cells);
-	std::cout<<"P"<<rank<<" contains "<<tmp<<" particles\n";
 }
 
 int SimProcess::index(int* p, int* n){
 	int real_p[DIM];
 	for(int d=0; d<DIM; d++){
 		real_p[d]=p[d];
-		while(real_p[d]<0){
+		if(real_p[d]<0){
 			real_p[d] = n[d]+p[d];
-		}
-		while(real_p[d]>=n[d]){
+		}else if(real_p[d]>=n[d]){
 			real_p[d] = p[d]-n[d];
 		}
 	}

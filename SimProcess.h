@@ -85,7 +85,7 @@ public:
 	/**
 	 * Calculates the Force between all Particles within the Cells of this Process
 	 */
-	void compE(Cell* cells, real t);
+	void compE(Cell* cells);
 
 	/**
 	 * Calculates the new Velocity of the particles caused by the new force
@@ -107,12 +107,6 @@ public:
 	void force(real* p_X, real* F);
 
 	real lj_force(real r);
-
-	real lj_potential(real r);
-
-	real abs(real* X);
-	real abs(real* X1, real* X2);
-	void devide_symetric();
 
 	/**
 	 * Returns the id of the cell responsible for the Position p_X
