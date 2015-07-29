@@ -51,11 +51,11 @@ void Cell::deletePl(){
 }
 
 void Cell::set_params(real* p_start, int p_id, real* p_cell_size){
-	id=p_id;
-	for(int d=0; d<DIM; d++){
-		start[d] = p_start[d];
-		cell_size[d] = p_cell_size[d];
-	}
+//	id=p_id;
+//	for(int d=0; d<DIM; d++){
+//		start[d] = p_start[d];
+//		cell_size[d] = p_cell_size[d];
+//	}
 }
 
 
