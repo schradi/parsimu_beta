@@ -43,10 +43,10 @@ void SimProcess::timeIntegration(Cell* cells){
 		#if DEBUG
 			MPI::COMM_WORLD.Barrier();
 		#endif
-		if(t_step_nr%output_resolution==0){
-			if(DOKU>=2) std::cout<<"Pr "<<rank<<" - output\n";
-			output(cells, (int) t_step_nr/output_resolution);
-		}
+//		if(t_step_nr%output_resolution==0){
+//			if(DOKU>=2) std::cout<<"Pr "<<rank<<" - output\n";
+//			output(cells, (int) t_step_nr/output_resolution);
+//		}
 		if(rank == 0) if((t_step_nr*100%(int)(t_end/delta_t))==0) std::cout<<"Process: "<<(int)((t/t_end)*100) + 1 <<"%\n";
 		t+=delta_t;
 		t_step_nr++;
@@ -98,7 +98,7 @@ void SimProcess::output(Cell* cells, int outp_nr){
 		std::fstream file;
 		// Geting Name of the file
 		char cline_nr[32];
-		sprintf(cline_nr, "%d", outp_nr+1);
+		sprintf(cline_nr, "%d", outp_nr);
 		char outputfile_new[20]="data/data.csv.";
 		strcat(outputfile_new, cline_nr);
 		file.open(outputfile_new, std::ios::out|std::ios::trunc);
@@ -791,14 +791,12 @@ void SimProcess::create_particles(ParticleList* new_pl, real* r_start, real* r_s
 			new_pl->p->m=1;
 			for(int d=0; d<DIM; d++){
 				new_pl->p->X[d]=pos[d];
-				new_pl->p->V[d]=p_V[d]+(Vvar-(float) (rand()) / ((float) (RAND_MAX/(Vvar*2))));
-//				new_pl->p->V[d]=0.5;
+//				new_pl->p->V[d]=p_V[d]+(Vvar-(float) (rand()) / ((float) (RAND_MAX/(Vvar*2))));
+				new_pl->p->V[d]=0.5;
 			}
 		}
 	}
 	std::cout<<"Included Particles\t"<<id_c<<"\n";
-
-
 }
 
 void SimProcess::insert_particles(ParticleList* new_pl){

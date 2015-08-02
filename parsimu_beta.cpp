@@ -61,8 +61,8 @@ int main(int argc, char* argv[]) {
 	if(sim_p->rank==0) std::cout<<"initData\n";
 	sim_p->initData(cells);
 
-	sim_p->output(cells, 0);
-	MPI::COMM_WORLD.Barrier();
+//	sim_p->output(cells, 0);
+//	MPI::COMM_WORLD.Barrier();
 	sim_p->communicate(cells);
 	MPI::COMM_WORLD.Barrier();
 	sim_p->timeIntegration(cells);
