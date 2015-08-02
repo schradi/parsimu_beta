@@ -63,6 +63,7 @@ int main(int argc, char* argv[]) {
 
 //	sim_p->output(cells, 0);
 //	MPI::COMM_WORLD.Barrier();
+	if(sim_p->rank==0) std::cout<<"communicate\n";
 	sim_p->communicate(cells);
 	MPI::COMM_WORLD.Barrier();
 	sim_p->timeIntegration(cells);
