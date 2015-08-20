@@ -1,0 +1,38 @@
+---Included settings---
+r_cut	25
+global_size[0]	100
+global_size[1]	100
+t_end	1
+delta_t	0.01
+output_resolution	50
+sigma	1
+epsilon	0.1
+Vvar	0.1
+
+---Calculated Global Settings---
+force(r_cut)	-3.93216e-10
+global_np[0]	1
+global_np[1]	1
+global_nc[0]	4
+global_nc[1]	4
+max_V	2500
+
+---Calculated Local Settings of rank 0---
+local_size[0]	0
+local_size[1]	0
+cell_size[0]	25
+cell_size[1]	25
+local_nc[0]	0
+local_nc[1]	0
+neigh_lower[0]	0
+neigh_lower[1]	0
+neigh_upper[0]	0
+neigh_upper[1]	0
+start[0]	0
+start[1]	0
+ic_start[0]	0
+ic_start[1]	0
+ic_stop[0]	0
+ic_stop[1]	0
+ip[0]		0
+ip[1]		0

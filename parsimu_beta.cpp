@@ -86,41 +86,36 @@ int main(int argc, char* argv[]) {
 	MPI::COMM_WORLD.Barrier();
 	sim_p->devide_symetric(p_map);
 	sim_p->spread_local_info(p_map);
-	if(sim_p->rank==0) std::cout<<"create_cells\n";
+//	if(sim_p->rank==0) std::cout<<"create_cells\n";
 	int numc=(sim_p->local_nc[0]+2)*(sim_p->local_nc[1]+2);
 	Cell* cells=new Cell[numc];
 	sim_p->create_cells(cells);
 	MPI::COMM_WORLD.Barrier();
 
-	if(sim_p->rank==0) std::cout<<"initData\n";
+//	if(sim_p->rank==0) std::cout<<"initData\n";
 	sim_p->initData(cells, p_map);
-
+	MPI::COMM_WORLD.Barrier();
 	sim_p->output(cells, 0);
 	MPI::COMM_WORLD.Barrier();
-	if(sim_p->rank==0) std::cout<<"communicate\n";
+//	if(sim_p->rank==0) std::cout<<"communicate\n";
 
 	sim_p->communicate(cells);
-
+	MPI::COMM_WORLD.Barrier();
 	sim_p->timeIntegration(cells, p_map);
-//	int c=0;
-//	std::cout<<	std::cout<<"P"<<rank<<" delta_t "<<delta_t<<"\n";"done";
-//	for(long int i=0; i<200000000; i+=1){
-//		i+=c;
-//	}
-//	MPI::COMM_WORLD.Barrier();
-//	if(sim_p->rank==0){
+	MPI::COMM_WORLD.Barrier();
+	if(sim_p->rank==0 && sim_p->log_time){
 //		std::cout<<"DONE\n";
-//		std::fstream file;
-//		file.open("Times.csv", std::ios::out | std::ios::app);
-//		file<<c_nump*c_nump;
-//		for(TimerList* ti=sim_p->timer_list; ti!=NULL; ti=ti->next){
-//			file<<ti->t->timer<<",\t";
-//			std::cout<<ti->t->tag<<", ";
-//		}
-//		file<<"\n";
-//		std::cout<<"\n";
-//		file.close();
-//	}
+		std::fstream file;
+		file.open("Times.csv", std::ios::out | std::ios::app);
+		file<<c_nump*c_nump;
+		for(TimerList* ti=sim_p->timer_list; ti!=NULL; ti=ti->next){
+			file<<ti->t->timer<<",\t";
+			std::cout<<ti->t->tag<<", ";
+		}
+		file<<"\n";
+		std::cout<<"\n";
+		file.close();
+	}
 
 	MPI::Finalize();
 	return 0;

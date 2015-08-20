@@ -17,7 +17,7 @@
 #define COM_SZE 10
 #define DOKU 0
 
-#define DEBUG true
+#define DEBUG false
 
 //Used Datatype
 typedef double real; /**< used datatype for all Values*/

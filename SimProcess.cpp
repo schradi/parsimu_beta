@@ -8,49 +8,49 @@
 #include "SimProcess.h"
 
 void SimProcess::timeIntegration(Cell* cells, real* p_map){
-	for(int p=0; p<np; p++)	{
-		if(rank==p){
-			std::cout<<"\nRank"<<rank<<"\n";
-			for(int d=0; d<DIM; d++){
-				std::cout<<"P"<<rank<<"cell_size["<<d<<"]="<< cell_size[d]<<"\n";
-				std::cout<<"P"<<rank<<"global_nc["<<d<<"]="<< global_nc[d]<<"\n";
-				std::cout<<"P"<<rank<<"global_size["<<d<<"]="<< global_size[d]<<"\n";
-				std::cout<<"P"<<rank<<"ic_start["<<d<<"]="<< ic_start[d]<<"\n";
-				std::cout<<"P"<<rank<<"ic_stop["<<d<<"]="<< ic_stop[d]<<"\n";
-				std::cout<<"P"<<rank<<"ip["<<d<<"]="<< ip[d]<<"\n";
-				std::cout<<"P"<<rank<<"local_nc["<<d<<"]="<< local_nc[d]<<"\n";
-				std::cout<<"P"<<rank<<"local_size["<<d<<"]="<< local_size[d]<<"\n";
-				std::cout<<"P"<<rank<<"neigh_lower["<<d<<"]="<< neigh_lower[d]<<"\n";
-				std::cout<<"P"<<rank<<"neigh_upper["<<d<<"]="<< neigh_upper[d]<<"\n";
-				std::cout<<"P"<<rank<<"global_np["<<d<<"]="<< global_np[d]<<"\n";
-				std::cout<<"P"<<rank<<"start["<<d<<"]="<< start[d]<<"\n";
-			}
-			std::cout<<"P"<<rank<<"lj_force_r_cut="<<lj_force_r_cut<<"\n";
-			std::cout<<"P"<<rank<<"delta_t="<< delta_t<<"\n";
-			std::cout<<"P"<<rank<<"t_end="<< t_end<<"\n";
-			std::cout<<"P"<<rank<<"global_num_part="<<global_num_part <<"\n";
-			std::cout<<"P"<<rank<<"num_part="<<num_part <<"\n";
-			std::cout<<"P"<<rank<<"rank="<<rank <<"\n";
-			std::cout<<"P"<<rank<<"r_cut="<<r_cut <<"\n";
-			std::cout<<"P"<<rank<<"max_V="<<max_V <<"\n";
-			std::cout<<"P"<<rank<<"sigma="<<sigma <<"\n";
-			std::cout<<"P"<<rank<<"epsilon="<< epsilon<<"\n";
-			std::cout<<"P"<<rank<<"Vvar="<<Vvar <<"\n";
-			std::cout<<"P"<<rank<<"output_resolution="<<output_resolution <<"\n";
-			std::cout<<"P"<<rank<<"t="<<t <<"\n";
-			std::cout<<"P"<<rank<<"np="<< np<<"\n";
-			std::cout<<"P"<<rank<<"output_folder="<<output_folder <<"\n";
-			std::cout<<"P"<<rank<<"log_time="<< log_time<<"\n";
-			std::cout<<"P"<<rank<<"log_energy="<< log_energy<<"\n";
-			std::cout<<"P"<<rank<<"log_positions="<< log_positions<<"\n";
-			std::cout<<"P"<<rank<<"log_velocity="<< log_velocity<<"\n";
-			std::cout<<"P"<<rank<<"log_id="<< log_id<<"\n";
-		}
-		MPI::COMM_WORLD.Barrier();
-	}
+//	for(int p=0; p<np; p++)	{
+//		if(rank==p){
+//			std::cout<<"\nRank"<<rank<<"\n";
+//			for(int d=0; d<DIM; d++){
+//				std::cout<<"P"<<rank<<"cell_size["<<d<<"]="<< cell_size[d]<<"\n";
+//				std::cout<<"P"<<rank<<"global_nc["<<d<<"]="<< global_nc[d]<<"\n";
+//				std::cout<<"P"<<rank<<"global_size["<<d<<"]="<< global_size[d]<<"\n";
+//				std::cout<<"P"<<rank<<"ic_start["<<d<<"]="<< ic_start[d]<<"\n";
+//				std::cout<<"P"<<rank<<"ic_stop["<<d<<"]="<< ic_stop[d]<<"\n";
+//				std::cout<<"P"<<rank<<"ip["<<d<<"]="<< ip[d]<<"\n";
+//				std::cout<<"P"<<rank<<"local_nc["<<d<<"]="<< local_nc[d]<<"\n";
+//				std::cout<<"P"<<rank<<"local_size["<<d<<"]="<< local_size[d]<<"\n";
+//				std::cout<<"P"<<rank<<"neigh_lower["<<d<<"]="<< neigh_lower[d]<<"\n";
+//				std::cout<<"P"<<rank<<"neigh_upper["<<d<<"]="<< neigh_upper[d]<<"\n";
+//				std::cout<<"P"<<rank<<"global_np["<<d<<"]="<< global_np[d]<<"\n";
+//				std::cout<<"P"<<rank<<"start["<<d<<"]="<< start[d]<<"\n";
+//			}
+//			std::cout<<"P"<<rank<<"lj_force_r_cut="<<lj_force_r_cut<<"\n";
+//			std::cout<<"P"<<rank<<"delta_t="<< delta_t<<"\n";
+//			std::cout<<"P"<<rank<<"t_end="<< t_end<<"\n";
+//			std::cout<<"P"<<rank<<"global_num_part="<<global_num_part <<"\n";
+//			std::cout<<"P"<<rank<<"num_part="<<num_part <<"\n";
+//			std::cout<<"P"<<rank<<"rank="<<rank <<"\n";
+//			std::cout<<"P"<<rank<<"r_cut="<<r_cut <<"\n";
+//			std::cout<<"P"<<rank<<"max_V="<<max_V <<"\n";
+//			std::cout<<"P"<<rank<<"sigma="<<sigma <<"\n";
+//			std::cout<<"P"<<rank<<"epsilon="<< epsilon<<"\n";
+//			std::cout<<"P"<<rank<<"Vvar="<<Vvar <<"\n";
+//			std::cout<<"P"<<rank<<"output_resolution="<<output_resolution <<"\n";
+//			std::cout<<"P"<<rank<<"t="<<t <<"\n";
+//			std::cout<<"P"<<rank<<"np="<< np<<"\n";
+//			std::cout<<"P"<<rank<<"output_folder="<<output_folder <<"\n";
+//			std::cout<<"P"<<rank<<"log_time="<< log_time<<"\n";
+//			std::cout<<"P"<<rank<<"log_energy="<< log_energy<<"\n";
+//			std::cout<<"P"<<rank<<"log_positions="<< log_positions<<"\n";
+//			std::cout<<"P"<<rank<<"log_velocity="<< log_velocity<<"\n";
+//			std::cout<<"P"<<rank<<"log_id="<< log_id<<"\n";
+//		}
+//		MPI::COMM_WORLD.Barrier();
+//	}
 	t=delta_t;
 	long int t_step_nr=1;
-	if(DOKU>=0) if(rank==0) std::cout<<"-----------------------\n- starting Simulation -\n-----------------------\n";
+//	if(DOKU>=0) if(rank==0) std::cout<<"-----------------------\n- starting Simulation -\n-----------------------\n";
 	compA(cells);
 	while (t<t_end){
 		clock_t t_start;
@@ -58,12 +58,12 @@ void SimProcess::timeIntegration(Cell* cells, real* p_map){
 		#if DEBUG
 			MPI::COMM_WORLD.Barrier();
 		#endif
-		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compX\n";
+//		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compX\n";
 		compX(cells);
 		#if DEBUG
 			MPI::COMM_WORLD.Barrier();
 		#endif
-		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - moveParticles\n";
+//		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - moveParticles\n";
 		moveParticles(cells);
 		#if DEBUG
 			MPI::COMM_WORLD.Barrier();
@@ -82,10 +82,10 @@ void SimProcess::timeIntegration(Cell* cells, real* p_map){
 		#endif
 //		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compV\n";
 		compV(cells);
-		if(t_step_nr%output_resolution==0){
-			if(DOKU>=2) std::cout<<"Pr "<<rank<<" - output\n";
-			output(cells, (int) t_step_nr/output_resolution);
-		}
+//		if(t_step_nr%output_resolution==0){
+//			if(DOKU>=2) std::cout<<"Pr "<<rank<<" - output\n";
+//			output(cells, (int) t_step_nr/output_resolution);
+//		}
 		if(rank == 0) if((t_step_nr*100%(int)(t_end/delta_t))==0) std::cout<<"Process: "<<(int)((t/t_end)*100) + 1 <<"%\n";
 		t+=delta_t;
 		t_step_nr++;
@@ -120,16 +120,13 @@ void SimProcess::output(Cell* cells, int outp_nr){
 //		}
 
 		// Important: just particles stored in pl are considered
-		if(num_part!=get_num_p(ic_start, ic_stop, cells)){
-			std::cout<<"P"<<rank<<"-FALSCH: num_part="<<num_part<<" - get_num_p="<<get_num_p(ic_start, ic_stop, cells)<<" GHOST particles: "<<num_ghost_part<<"\n";
-		}
 
 
-		if(DOKU>=3 )std::cout<<"Pr "<<rank<<" - output - begin\n";
+//		if(DOKU>=3 )std::cout<<"Pr "<<rank<<" - output - begin\n";
 		if(rank==0){
 
 			// MASTER: Receives information from other processes and puts them in a file
-			long int recv_pl_l[global_np[0]*global_np[1]]; // Number of particles of each process
+			long int recv_pl_l[np]; // Number of particles of each process
 			long int recv_pl_al=num_part;	// Number of particles at all
 
 			// Receiving Number of Particles of each Process
@@ -149,7 +146,7 @@ void SimProcess::output(Cell* cells, int outp_nr){
 
 			code_range(recv_pl, ic_start, ic_stop, cells);
 			long int pos=recv_pl_l[0]*COM_SZE;
-			for (int cp=1; cp<global_np[0]*global_np[1];cp++){
+			for (int cp=1; cp<np;cp++){
 				MPI::COMM_WORLD.Recv(&recv_pl[pos], recv_pl_l[cp]*COM_SZE, MPI::DOUBLE, cp, 2);
 				pos+=recv_pl_l[cp]*COM_SZE;
 			}
@@ -204,7 +201,7 @@ void SimProcess::output(Cell* cells, int outp_nr){
 			code_range(send_pl, ic_start, ic_stop, cells);
 			MPI::COMM_WORLD.Send(send_pl, num_part*COM_SZE, MPI::DOUBLE, 0, 2);
 		}
-		if(DOKU>=3) std::cout<<"Pr "<<rank<<" - output - end\n";
+//		if(DOKU>=3) std::cout<<"Pr "<<rank<<" - output - end\n";
 		if(rank==0 && log_time) timer_list->calc_avg_time("output", t_start);
 	}
 }
@@ -306,12 +303,13 @@ void SimProcess::moveParticles(Cell* cells){
 	ParticleList* tmp;
 	ParticleList* prev;
 	ParticleList* akt;
-	if(num_part!=get_num_p(ic_start, ic_stop, cells)){
-		std::cout<<"P"<<rank<<"-FALSCH: movV\n";
-		while(t!=0){
-			t++;
-		}
-	}
+	num_part=get_num_p(ic_start, ic_stop, cells);
+//	if(num_part!=get_num_p(ic_start, ic_stop, cells)){
+//		std::cout<<"P"<<rank<<"-FALSCH: movV\n";
+//		while(t!=0){
+//			t++;
+//		}
+//	}
 	for (ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
 		for (ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
 			prev=NULL;
@@ -354,12 +352,7 @@ void SimProcess::moveParticles(Cell* cells){
 			}
 		}
 	}
-	if(num_part!=get_num_p(ic_start, ic_stop, cells)){
-		std::cout<<"P"<<rank<<"-FALSCH: movH\n";
-		while(t!=0){
-			t++;
-		}
-	}
+	num_part=get_num_p(ic_start, ic_stop, cells);
 	if(rank==0 && log_time) timer_list->calc_avg_time("moveParticles", t_start);
 }
 
@@ -376,16 +369,16 @@ void SimProcess::devide_symetric(real* p_map){
 	// sets: p_map
 
 	if(rank==0){
-		std::cout<<"rank"<<rank<<"\n";
-		std::cout<<"np"<<np<<"\n";
-		std::cout<<"global_size[0]"<<global_size[0]<<"\n";
-		std::cout<<"global_size[1]"<<global_size[1]<<"\n";
-		std::cout<<"cell_size[0]"<<cell_size[0]<<"\n";
-		std::cout<<"cell_size[1]"<<cell_size[1]<<"\n";
-		std::cout<<"global_nc[0]"<<global_nc[0]<<"\n";
-		std::cout<<"global_nc[1]"<<global_nc[1]<<"\n";
-		std::cout<<"global_np[0]"<<global_np[0]<<"\n";
-		std::cout<<"global_np[1]"<<global_np[1]<<"\n";
+//		std::cout<<"rank"<<rank<<"\n";
+//		std::cout<<"np"<<np<<"\n";
+//		std::cout<<"global_size[0]"<<global_size[0]<<"\n";
+//		std::cout<<"global_size[1]"<<global_size[1]<<"\n";
+//		std::cout<<"cell_size[0]"<<cell_size[0]<<"\n";
+//		std::cout<<"cell_size[1]"<<cell_size[1]<<"\n";
+//		std::cout<<"global_nc[0]"<<global_nc[0]<<"\n";
+//		std::cout<<"global_nc[1]"<<global_nc[1]<<"\n";
+//		std::cout<<"global_np[0]"<<global_np[0]<<"\n";
+//		std::cout<<"global_np[1]"<<global_np[1]<<"\n";
 
 		real np_size[DIM];
 		real size[DIM];
@@ -411,9 +404,9 @@ void SimProcess::devide_symetric(real* p_map){
 //			}
 //		}
 
-		for(int p=0; p<2*np; p+=2){
-			std::cout<<"map."<<p<<"=["<<p_map[p]<<","<<p_map[p+1]<<"]\n";
-		}
+//		for(int p=0; p<2*np; p+=2){
+//			std::cout<<"map."<<p<<"=["<<p_map[p]<<","<<p_map[p+1]<<"]\n";
+//		}
 	}
 
 
@@ -475,7 +468,7 @@ void SimProcess::spread_local_info(real* p_map){
 	// sets ic_start, ic_stop, local_nc,
 	real recv[DIM*2];
 	if(rank==0){
-		std::cout<<"\n";
+//		std::cout<<"\n";
 		real var_send[np*DIM*2];
 		int p_idx[DIM];
 		int p=0;
@@ -496,13 +489,13 @@ void SimProcess::spread_local_info(real* p_map){
 					}else{
 						var_send[pos]=global_size[d]-p_map[DIM*p+d];
 					}
-					std::cout<<"P"<<p<<" - local_size["<<d<<"]="<<var_send[pos]<<"\n";
+//					std::cout<<"P"<<p<<" - local_size["<<d<<"]="<<var_send[pos]<<"\n";
 					pos++;
 				}
 				p++;
 			}
 		}
-		std::cout<<"var_send[3]="<<var_send[3]<<"\n";
+//		std::cout<<"var_send[3]="<<var_send[3]<<"\n";
 		for(p=1; p<np; p++){
 			//send var_send, length=4
 //			std::cout<<"sending to "<<p<<": "<<var_send[p*4]<<", "<<": "<<var_send[p*4+1]<<", "<<": "<<var_send[p*4+2]<<", "<<": "<<var_send[p*4+3]<<"\n";
@@ -523,35 +516,35 @@ void SimProcess::spread_local_info(real* p_map){
 		ic_stop[d]=ic_start[d]+local_nc[d]-1;
 	}
 
-	for(int p=0; p<np; p++){
-		MPI::COMM_WORLD.Barrier();
-		if(rank==p)std::cout<<" ";
-		MPI::COMM_WORLD.Barrier();
-		if(rank==p){
-			std::cout<<"\nProcess "<<rank<<": \n";
-			std::cout<<"ic_start: ";
-			for(int d=0; d<DIM; d++)std::cout<<ic_start[d]<<",";
-			std::cout<<"\n";
-			std::cout<<"ic_stop: ";
-			for(int d=0; d<DIM; d++)std::cout<<ic_stop[d]<<",";
-			std::cout<<"\n";
-			std::cout<<"ip: ";
-			for(int d=0; d<DIM; d++)std::cout<<ip[d]<<",";
-			std::cout<<"\n";
-			std::cout<<"local_nc: ";
-			for(int d=0; d<DIM; d++)std::cout<<local_nc[d]<<",";
-			std::cout<<"\n";
-			std::cout<<"local_size: ";
-			for(int d=0; d<DIM; d++)std::cout<<local_size[d]<<",";
-			std::cout<<"\n";
-			std::cout<<"global_np: ";
-			for(int d=0; d<DIM; d++)std::cout<<global_np[d]<<",";
-			std::cout<<"\n";
-			std::cout<<"start - "<<local_index(ic_start)<<" : ";
-			for(int d=0; d<DIM; d++)std::cout<<start[d]<<",";
-			std::cout<<"\n";
-		}
-	}
+//	for(int p=0; p<np; p++){
+//		MPI::COMM_WORLD.Barrier();
+//		if(rank==p)std::cout<<" ";
+//		MPI::COMM_WORLD.Barrier();
+//		if(rank==p){
+//			std::cout<<"\nProcess "<<rank<<": \n";
+//			std::cout<<"ic_start: ";
+//			for(int d=0; d<DIM; d++)std::cout<<ic_start[d]<<",";
+//			std::cout<<"\n";
+//			std::cout<<"ic_stop: ";
+//			for(int d=0; d<DIM; d++)std::cout<<ic_stop[d]<<",";
+//			std::cout<<"\n";
+//			std::cout<<"ip: ";
+//			for(int d=0; d<DIM; d++)std::cout<<ip[d]<<",";
+//			std::cout<<"\n";
+//			std::cout<<"local_nc: ";
+//			for(int d=0; d<DIM; d++)std::cout<<local_nc[d]<<",";
+//			std::cout<<"\n";
+//			std::cout<<"local_size: ";
+//			for(int d=0; d<DIM; d++)std::cout<<local_size[d]<<",";
+//			std::cout<<"\n";
+//			std::cout<<"global_np: ";
+//			for(int d=0; d<DIM; d++)std::cout<<global_np[d]<<",";
+//			std::cout<<"\n";
+//			std::cout<<"start - "<<local_index(ic_start)<<" : ";
+//			for(int d=0; d<DIM; d++)std::cout<<start[d]<<",";
+//			std::cout<<"\n";
+//		}
+//	}
 }
 void SimProcess::calculate_local_constants(){
 	//	Local calculated Variables
@@ -590,12 +583,10 @@ void SimProcess::calculate_local_constants(){
 		neigh_lower[1]=ip[0]+global_np[0]*(ip[1]-1);
 	}else{
 		neigh_lower[1]=global_np[0]*(global_np[1]-1)+ip[0];
-		std::cout<<"global_np[0]="<<global_np[0]<<"\n";
-		std::cout<<"global_np[1]="<<global_np[1]<<"\n";
 	}
 	if(ip[1]+1<global_np[1]){
 		neigh_upper[1]=ip[0]+global_np[0]*(ip[1]+1);
-		std::cout<<"neigh_upper[1]="<<global_np[1]<<"\n";
+//		std::cout<<"neigh_upper[1]="<<global_np[1]<<"\n";
 	}else{
 		neigh_upper[1]=ip[0];
 	}
@@ -629,7 +620,7 @@ SimProcess::SimProcess(char* p_output_folder){
 		}
 
 		std::fstream file;
-		std::cout<<"open "<<f_path<<"\n";
+//		std::cout<<"open "<<f_path<<"\n";
 		file.open(f_path, std::ios::in);
 		char line[200];
 		double testvar=0;
@@ -792,7 +783,7 @@ SimProcess::SimProcess(char* p_output_folder){
 //		}
 		file.close();
 	}
-	std::cout<<"Process "<<rank<<" - ready to start\n";
+//	std::cout<<"Process "<<rank<<" - ready to start\n";
 }
 
 void SimProcess::create_cells(Cell* cells){
@@ -863,7 +854,11 @@ void SimProcess::communicate(Cell* cells){
 	}
 	num_ghost_part=0;
 	for(int d=0; d<DIM; d++){
-		communicate(d, cells);
+		if(global_np[d]==1){
+			copy_border_cells(d, cells);
+		}else{
+			communicate(d, cells);
+		}
 	}
 //	std::cout<<"P"<<rank<<" after communicate: "<<num_part<<"\n";
 //	std::cout<<"P"<<rank<<" after communicate: Ghost"<<num_ghost_part<<"\n";
@@ -879,6 +874,45 @@ void SimProcess::communicate(Cell* cells){
 //		}
 //	}
 //	if(rank==0 && log_time) timer_list->calc_avg_time("communicate", t_start);
+}
+
+void SimProcess::copy_border_cells(int com_d, Cell* cells){
+//	std::cout<<"HHHHHHHHHHHHHH\nHHHHHHHHHHHHHH\nHHHHHHHHHHHHHH\nHHHHHHHHHHHHHH\n";
+	int oth_d;
+	if(com_d==0){
+		oth_d=1;
+	}else if(com_d==1){
+		oth_d=0;
+	}
+	int pb_corr;
+	int icr_lower_start[DIM], icr_upper_start[DIM];
+	int icr_lower_stop[DIM], icr_upper_stop[DIM];
+
+	icr_lower_start[com_d]=ic_start[com_d]-1;
+	icr_lower_start[oth_d]=ic_start[oth_d]-1;
+	icr_lower_stop[com_d]=ic_start[com_d];
+	icr_lower_stop[oth_d]=ic_stop[oth_d]+1;
+
+	icr_upper_start[com_d]=ic_stop[com_d];
+	icr_upper_start[oth_d]=ic_start[oth_d]-1;
+	icr_upper_stop[com_d]=ic_stop[com_d]+1;
+	icr_upper_stop[oth_d]=ic_stop[oth_d]+1;
+
+	long int pl_lower_length = get_num_p(icr_lower_start, icr_lower_stop, cells);
+//	std::cout<<"copying pl_lower_length="<<pl_lower_length<<"\n";
+	real pl_lower[pl_lower_length*COM_SZE];
+	code_range(pl_lower, icr_lower_start, icr_lower_stop, cells);
+	pb_corr=1;
+	delete_pl(icr_lower_start, icr_lower_stop, cells);
+	uncode_in_range(pl_lower, icr_upper_start, icr_upper_stop, pl_lower_length, cells, pb_corr, com_d);
+
+	long int pl_upper_length = get_num_p(icr_upper_start, icr_upper_stop, cells);
+//	std::cout<<"copying pl_upper_length="<<pl_upper_length<<"\n";
+	real pl_upper[pl_upper_length*COM_SZE];
+	code_range(pl_upper, icr_upper_start, icr_upper_stop, cells);
+	pb_corr=-1;
+	uncode_in_range(pl_upper, icr_lower_start, icr_lower_stop, pl_upper_length, cells, pb_corr, com_d);
+
 }
 
 void SimProcess::communicate(int com_d, Cell* cells){
@@ -982,12 +1016,6 @@ void SimProcess::delete_pl(int* icr_start, int* icr_stop, Cell* cells){
 			cells[local_index(ic)].deletePl();
 		}
 	}
-	if(num_part!=get_num_p(ic_start, ic_stop, cells)){
-		std::cout<<"P"<<rank<<"-FALSCH: hier1\n";
-		while(t!=0){
-			t++;
-		}
-	}
 }
 
 int SimProcess::get_num_p(int* icr_start, int* icr_stop, Cell* cells){
@@ -1040,12 +1068,6 @@ void SimProcess::uncode_in_range(real* recv_pl, int* icr_start, int*icr_stop, lo
 //		if(rank==0)std::cout<<"\n";
 		pos+=COM_SZE;
 		count++;
-	}
-	if(num_part!=get_num_p(ic_start, ic_stop, cells)){
-		std::cout<<"P"<<rank<<"-FALSCH: hier2\n";
-		while(t!=0){
-			t++;
-		}
 	}
 //	if(rank==0) std::cout<<"P"<<rank<<" AFTER num_part="<<num_part<<"\n";
 //	std::cout<<"P"<<rank<<" counts "<<count<<" Particles\n";

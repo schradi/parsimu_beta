@@ -63,6 +63,8 @@ public:
 	bool folder_output;
 	bool FALSCH;
 
+	void copy_border_cells(int com_d, Cell* cells);
+
 	void create_particles(ParticleList* new_pl);
 	/**
 	 * Communication between the processes
