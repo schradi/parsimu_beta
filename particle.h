@@ -12,7 +12,7 @@
 
 struct Particle{
 public:
-	int  id;			/**< ID of the Particle to track the way*/
+	long int  id;			/**< ID of the Particle to track the way*/
 	real m;				/**< Mass of the particle*/
 	real X[DIM];		/**< Position of the particle*/
 	real V[DIM];		/**< Velocity of the particle*/

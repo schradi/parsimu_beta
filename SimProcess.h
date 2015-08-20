@@ -26,9 +26,7 @@
  */
 class SimProcess{
 public:
-	real	lj_force_r_cut;
-	int errt;
-	bool aborted;
+	real lj_force_r_cut;
 	real cell_size[DIM];			/**< +Width of each cell*/
 	real delta_t;
 	real t_end;
@@ -42,22 +40,30 @@ public:
 	int  neigh_lower[DIM];			/**< +Rank of the lower neighboring processes in each direction*/
 	int	 neigh_upper[DIM];			/**< +Rank of the lower neighboring processes in each direction*/
 	int  global_np[DIM];			/**< +Number of running Processes*/
-	int  num_part;	/**< +Number of particles within this process*/
-	int	 num_ghost_part;
+	long int global_num_part;
+	long int  num_part;	/**< +Number of particles within this process*/
+	long int	 num_ghost_part;
 	int	 rank;						/**< +Rank of this Process*/
 	real r_cut;						/**< +cutting-radius for short-range forces*/
 	real start[DIM];				/**< +Starting-Point of this Process (left down point)*/
 	real max_V;				/**< +maximum of speed the particles are allowed to achieve*/
 	real sigma;					/**< Parameter sigma for the Lennard-Jones-Potential*/
 	real epsilon; 				/**< Parameter epsilon for the Lennard-Jones-Potential*/
-	TimerList* timerList;
+	TimerList* timer_list;
 	real Vvar;
-
 	int output_resolution;
 	real t;
 	int np;
+	char* output_folder;
+	bool log_time;
+	bool log_energy;
+	bool log_positions;
+	bool log_velocity;
+	bool log_id;
+	bool folder_output;
+	bool FALSCH;
 
-	void insert_particles(ParticleList* new_pl);
+	void create_particles(ParticleList* new_pl);
 	/**
 	 * Communication between the processes
 	 */
@@ -131,7 +137,12 @@ public:
 	/**
 	 * Include Data
 	 */
-	void initData (Cell* cells); // initialize Data Structure and include Data
+	void initData (Cell* cells, real* p_map); // initialize Data Structure and include Data
+
+	void devide_symetric(real* p_map);
+	void spread_global_info();
+	void spread_local_info(real* p_map);
+	void calculate_local_constants();
 
 	/**
 	 * Calculates the local index out of a global position
@@ -163,7 +174,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	SimProcess();
+	SimProcess(char* p_output_folder);
 
 	/**
 	 * Destructor
@@ -179,7 +190,7 @@ public:
 	/**
 	 * Calculates the next timestep
 	*/
-	void timeIntegration(Cell* cells);
+	void timeIntegration(Cell* cells, real* p_map);
 
 	/**
 	 * All Particles stored in adding are put in pl, adding = NULL
@@ -192,12 +203,15 @@ public:
 	void code_range(real* send_pl, int* icr_start, int* icr_stop, Cell* cells);
 
 	void code_p(Particle* p, real* code);
+
+	void sort_particles(ParticleList* pl, real* p_map, ParticleList** sorted_particles, long int** pl_l);
+
 	/**
 	* Convert an array of double into Particles and sort them in cells in a specified range
 	*/
-	void uncode_in_range(real* recv_pl, int* icr_start, int*icr_stop, int length_recv, Cell* cells, int pb_corr, int com_d);
+	void uncode_in_range(real* recv_pl, int* icr_start, int*icr_stop, long int length_recv, Cell* cells, int pb_corr, int com_d);
 
-	void uncode_in_range(real* recv_pl, int* icr_start, int*icr_stop, int length_recv, Cell* cells){
+	void uncode_in_range(real* recv_pl, int* icr_start, int*icr_stop, long int length_recv, Cell* cells){
 		uncode_in_range(recv_pl, icr_start, icr_stop, length_recv, cells, 0, -1);
 	};
 
@@ -207,7 +221,9 @@ public:
 
 	int get_num_p(int* icr_start, int* icr_stop, Cell* cells);
 
-	void create_particles(ParticleList* new_pl, real* r_start, real* r_stop, real resolution, real* p_V);
+	void spread_particles(ParticleList* pl, Cell* cells, real* p_map);
+
+	void create_particle_cloud(ParticleList* new_pl, real* r_start, real* r_stop, real resolution, real* p_V);
 };
 
 #endif /* SIMPROCESS_H_ */
