@@ -58,29 +58,27 @@ void SimProcess::timeIntegration(Cell* cells, real* p_map){
 		#if DEBUG
 			MPI::COMM_WORLD.Barrier();
 		#endif
-//		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compX\n";
+		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compX\n";
 		compX(cells);
 		#if DEBUG
 			MPI::COMM_WORLD.Barrier();
 		#endif
-//		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - moveParticles\n";
+		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - moveParticles\n";
 		moveParticles(cells);
 		#if DEBUG
 			MPI::COMM_WORLD.Barrier();
 		#endif
-//		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - communicate\n";
-//		if(rank == 0) if((t_step_nr*100%(int)(t_end/delta_t))==0) std::cout<<"GHOST Part Vorher: "<<num_ghost_part<<"\n";
+		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - communicate\n";
 		communicate(cells);
-//		if(rank == 0) if((t_step_nr*100%(int)(t_end/delta_t))==0) std::cout<<"GHOST Part Nachher: "<<num_ghost_part<<"\n";
 		#if DEBUG
 			MPI::COMM_WORLD.Barrier();
 		#endif
-//		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compA\n";
+		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compA\n";
 		compA(cells);
 		#if DEBUG
 			MPI::COMM_WORLD.Barrier();
 		#endif
-//		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compV\n";
+		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compV\n";
 		compV(cells);
 		if(t_step_nr%output_resolution==0){
 			if(DOKU>=2) std::cout<<"Pr "<<rank<<" - output\n";
@@ -305,12 +303,12 @@ void SimProcess::moveParticles(Cell* cells){
 	ParticleList* prev;
 	ParticleList* akt;
 	num_part=get_num_p(ic_start, ic_stop, cells);
-//	if(num_part!=get_num_p(ic_start, ic_stop, cells)){
-//		std::cout<<"P"<<rank<<"-FALSCH: movV\n";
-//		while(t!=0){
-//			t++;
-//		}
-//	}
+	if(num_part!=get_num_p(ic_start, ic_stop, cells)){
+		std::cout<<"P"<<rank<<"-FALSCH: movV\n";
+		while(t!=0){
+			t++;
+		}
+	}
 	for (ic[1]=ic_start[1]; ic[1]<=ic_stop[1]; ic[1]++){
 		for (ic[0]=ic_start[0]; ic[0]<=ic_stop[0]; ic[0]++){
 			prev=NULL;
