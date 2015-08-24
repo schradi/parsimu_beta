@@ -62,6 +62,8 @@ public:
 	bool log_id;
 	bool folder_output;
 	bool FALSCH;
+	real E_kin;
+	real E_pot;
 
 	void copy_border_cells(int com_d, Cell* cells);
 

@@ -82,10 +82,10 @@ void SimProcess::timeIntegration(Cell* cells, real* p_map){
 		#endif
 //		if(DOKU>=2) std::cout<<"Pr "<<rank<<" - compV\n";
 		compV(cells);
-//		if(t_step_nr%output_resolution==0){
-//			if(DOKU>=2) std::cout<<"Pr "<<rank<<" - output\n";
-//			output(cells, (int) t_step_nr/output_resolution);
-//		}
+		if(t_step_nr%output_resolution==0){
+			if(DOKU>=2) std::cout<<"Pr "<<rank<<" - output\n";
+			output(cells, (int) t_step_nr/output_resolution);
+		}
 		if(rank == 0) if((t_step_nr*100%(int)(t_end/delta_t))==0) std::cout<<"Process: "<<(int)((t/t_end)*100) + 1 <<"%\n";
 		t+=delta_t;
 		t_step_nr++;
@@ -97,6 +97,7 @@ void SimProcess::timeIntegration(Cell* cells, real* p_map){
 }
 
 void SimProcess::output(Cell* cells, int outp_nr){
+	//compE(cells);
 	if(log_positions){
 		clock_t t_start;
 		if(rank==0) t_start=clock();

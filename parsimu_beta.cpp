@@ -107,10 +107,11 @@ int main(int argc, char* argv[]) {
 //		std::cout<<"DONE\n";
 		std::fstream file;
 		file.open("Times.csv", std::ios::out | std::ios::app);
-		file<<c_nump*c_nump;
+		file<<sim_p->global_num_part<<",\t"<<sim_p->np;
+		std::cout<<"num_part, np";
 		for(TimerList* ti=sim_p->timer_list; ti!=NULL; ti=ti->next){
-			file<<ti->t->timer<<",\t";
-			std::cout<<ti->t->tag<<", ";
+			file<<",\t"<<ti->t->timer;
+			std::cout<<", "<<ti->t->tag;
 		}
 		file<<"\n";
 		std::cout<<"\n";
